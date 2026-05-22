@@ -783,7 +783,9 @@ textarea{resize:none;min-height:52px;}
       <button class="btn btn-g" onclick="onTKMonthChange('')">Tháng này</button>
       <span style="font-size:12px;color:var(--ink3);margin-left:6px;">Biểu đồ:</span>
       <select id="tk-range" onchange="renderTK()" style="font-size:12px;padding:4px 8px;border:1px solid var(--bd2);border-radius:8px;background:var(--card);font-family:var(--sans);">
-        <option value="6">6 tháng</option>
+        <option value="3">3 tháng</option>
+        <option value="6" selected>6 tháng</option>
+        <option value="9">9 tháng</option>
         <option value="12">12 tháng</option>
       </select>
     </div>
@@ -1653,10 +1655,62 @@ document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',2200);}
 
 // ═══ CHART ═══
+// Helper format trục Y biểu đồ
+function fmtAxis(v){
+  if(Math.abs(v)>=1e9) return (v/1e9).toFixed(1).replace(/\.0$/,'')+'tỷ';
+  if(Math.abs(v)>=1e6) return (v/1e6).toFixed(1).replace(/\.0$/,'')+'tr';
+  if(Math.abs(v)>=1e3) return (v/1e3).toFixed(0)+'k';
+  return v+'';
+}
+const _vndPlugin={
+  id:'vndFormat',
+  afterInit(chart){
+    chart.options.plugins.tooltip={
+      ...chart.options.plugins.tooltip,
+      callbacks:{
+        label(ctx){
+          const v=ctx.parsed.y??ctx.parsed;
+          const num=typeof v==='number'?v:(ctx.parsed.x??0);
+          return ' '+ctx.dataset.label+': '+new Intl.NumberFormat('vi-VN').format(Math.round(num))+'đ';
+        }
+      }
+    };
+  }
+};
 function mkChart(id,type,data,opts){
   const ctx=document.getElementById(id);if(!ctx)return;
   if(ctx._ch)ctx._ch.destroy();
-  ctx._ch=new Chart(ctx,{type,data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},...opts}});
+  // Thêm formatter trục Y tự động cho bar/line
+  const isBarLine=(type==='bar'||type==='line');
+  if(isBarLine){
+    opts=opts||{};
+    opts.scales=opts.scales||{};
+    const axisKey=opts.indexAxis==='y'?'x':'y';
+    opts.scales[axisKey]=opts.scales[axisKey]||{};
+    opts.scales[axisKey].ticks={
+      ...opts.scales[axisKey].ticks,
+      callback:(v)=>fmtAxis(v)
+    };
+  }
+  ctx._ch=new Chart(ctx,{
+    type,data,
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:data.datasets?.length>1},
+        tooltip:{
+          callbacks:{
+            label(c){
+              const raw=c.raw??c.parsed?.y??c.parsed?.x??0;
+              return ' '+c.dataset.label+': '+new Intl.NumberFormat('vi-VN').format(Math.round(raw))+'đ';
+            }
+          }
+        }
+      },
+      ...opts
+    }
+  });
 }
 
 // ═══ CATEGORY COMBOBOX ═══
@@ -1926,8 +1980,8 @@ function renderBudget(){
       <div class="bgt-bar"><div class="bgt-fill" style="width:${pct}%;background:${col}"></div></div>
     </div>`);
     labels.push(b.cat.length>10?b.cat.slice(0,10)+'…':b.cat);
-    actualD.push(Math.round(spent/1e6*10)/10);
-    budgetD.push(Math.round(b.amt/1e6*10)/10);
+    actualD.push(Math.round(spent));
+    budgetD.push(Math.round(b.amt));
     barColors.push(over?'rgba(139,30,45,.7)':warn?'rgba(138,98,0,.6)':'rgba(45,106,79,.65)');
   });
   el.innerHTML=rows.join('');
@@ -2375,12 +2429,12 @@ function renderTK(){
     months.push(lbl);
     const tArr=D.thu.filter(x=>x.date?.startsWith(m));
     const cArr=D.chi.filter(x=>x.date?.startsWith(m));
-    inD.push(Math.round(tArr.reduce((a,x)=>a+x.amt,0)/1e6*10)/10);
-    outD.push(Math.round(cArr.reduce((a,x)=>a+x.amt,0)/1e6*10)/10);
+    inD.push(Math.round(tArr.reduce((a,x)=>a+x.amt,0)));
+    outD.push(Math.round(cArr.reduce((a,x)=>a+x.amt,0)));
     const txV=nlSum(tArr,'xanh'), tdV=nlSum(tArr,'do');
     const cxV=nlSum(cArr,'xanh'), cdV=nlSum(cArr,'do');
-    nlXD.push(Math.round((txV+cxV)/1e6*10)/10);
-    nlDD.push(Math.round((tdV+cdV)/1e6*10)/10);
+    nlXD.push(Math.round(txV+cxV));
+    nlDD.push(Math.round(tdV+cdV));
   }
 
   const rangeTitle = range===6?'6 Tháng Gần Nhất':'12 Tháng Gần Nhất';
@@ -2390,13 +2444,13 @@ function renderTK(){
   if(nlTitle) nlTitle.textContent = `⚡ Năng Lượng – ${rangeTitle}`;
 
   mkChart('chart-tc6','bar',{labels:months, datasets:[
-    {label:'Thu (tr.đ)',data:inD,backgroundColor:'rgba(45,106,79,.7)',borderRadius:4},
-    {label:'Chi (tr.đ)',data:outD,backgroundColor:'rgba(139,30,45,.55)',borderRadius:4}
+    {label:'Thu',data:inD,backgroundColor:'rgba(45,106,79,.7)',borderRadius:4},
+    {label:'Chi',data:outD,backgroundColor:'rgba(139,30,45,.55)',borderRadius:4}
   ]},{scales:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{beginAtZero:true}}});
 
   mkChart('chart-nl6','bar',{labels:months, datasets:[
-    {label:'NL Xanh (tr.đ)',data:nlXD,backgroundColor:'rgba(45,106,79,.7)',borderRadius:4},
-    {label:'NL Đỏ (tr.đ)', data:nlDD,backgroundColor:'rgba(139,30,45,.55)',borderRadius:4}
+    {label:'NL Xanh',data:nlXD,backgroundColor:'rgba(45,106,79,.7)',borderRadius:4},
+    {label:'NL Đỏ', data:nlDD,backgroundColor:'rgba(139,30,45,.55)',borderRadius:4}
   ]},{scales:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{beginAtZero:true}}});
 
   // ── BLOCK 4: Danh mục thu (donut) ──
@@ -2428,10 +2482,10 @@ function renderTK(){
 
   // Danh mục chi (bar ngang)
   const cats=[...new Set(chiM.map(x=>x.cat||'Khác'))];
-  const catAmts=cats.map(c=>Math.round(chiM.filter(x=>(x.cat||'Khác')===c).reduce((a,x)=>a+x.amt,0)/1e3)/1e3);
+  const catAmts=cats.map(c=>chiM.filter(x=>(x.cat||'Khác')===c).reduce((a,x)=>a+x.amt,0));
   const catCols=cats.map((_,i)=>`hsl(${[160,45,220,30,270,10,190,90,340,130,60,200][i%12]},38%,45%)`);
   if(cats.length){
-    mkChart('chart-cat','bar',{labels:cats,datasets:[{label:'Chi (tr.đ)',data:catAmts,backgroundColor:catCols,borderRadius:3}]},
+    mkChart('chart-cat','bar',{labels:cats,datasets:[{label:'Chi',data:catAmts,backgroundColor:catCols,borderRadius:3}]},
       {indexAxis:'y',scales:{x:{beginAtZero:true},y:{ticks:{autoSkip:false,font:{size:11}}}}});
   } else {
     const c=document.getElementById('chart-cat');if(c&&c._ch){c._ch.destroy();c._ch=null;}
@@ -2564,20 +2618,20 @@ function renderTKFundCharts(){
       .reduce((a,f)=>a+(f.type==='add'?f.amt:-f.amt),0);
     const nap = D.funds.filter(f=>f.date?.startsWith(m)&&f.type==='add').reduce((a,f)=>a+f.amt,0);
     const rut = D.funds.filter(f=>f.date?.startsWith(m)&&f.type==='withdraw').reduce((a,f)=>a+f.amt,0);
-    balD.push(Math.round(bal/1e6*10)/10);
-    napD.push(Math.round(nap/1e6*10)/10);
-    rutD.push(Math.round(rut/1e6*10)/10);
+    balD.push(Math.round(bal));
+    napD.push(Math.round(nap));
+    rutD.push(Math.round(rut));
   }
 
   mkChart('chart-fund-bal','line',{labels:months,datasets:[{
-    label:'Số dư (tr.đ)',data:balD,
+    label:'Số dư',data:balD,
     borderColor:'#2d6a4f',backgroundColor:'rgba(45,106,79,.12)',
     fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#2d6a4f'
   }]},{scales:{x:{ticks:{font:{size:10}}},y:{beginAtZero:false}}});
 
   mkChart('chart-fund-flow','bar',{labels:months,datasets:[
-    {label:'Nạp (tr.đ)',data:napD,backgroundColor:'rgba(45,106,79,.7)',borderRadius:4},
-    {label:'Rút (tr.đ)',data:rutD,backgroundColor:'rgba(139,30,45,.55)',borderRadius:4}
+    {label:'Nạp',data:napD,backgroundColor:'rgba(45,106,79,.7)',borderRadius:4},
+    {label:'Rút',data:rutD,backgroundColor:'rgba(139,30,45,.55)',borderRadius:4}
   ]},{scales:{x:{ticks:{font:{size:10}}},y:{beginAtZero:true}}});
 }
 
@@ -2615,15 +2669,15 @@ function renderTKNtsCharts(){
     const tsM = D.ts.filter(x=>!x.date||x.date<=cutoff).reduce((a,x)=>a+x.val,0);
     const vtM = D.vaytoi.filter(x=>!x.done&&(!x.date||x.date<=cutoff)).reduce((a,x)=>a+x.con,0);
     const noM = D.no.filter(x=>!x.done&&(!x.date||x.date<=cutoff)).reduce((a,x)=>a+x.con,0);
-    tsD.push(Math.round(tsM/1e6*10)/10);
-    vtD.push(Math.round(vtM/1e6*10)/10);
-    noD.push(Math.round(noM/1e6*10)/10);
+    tsD.push(Math.round(tsM));
+    vtD.push(Math.round(vtM));
+    noD.push(Math.round(noM));
   }
 
   mkChart('chart-nts-trend','bar',{labels:months,datasets:[
-    {label:'Tài sản (tr.đ)', data:tsD, backgroundColor:'rgba(45,106,79,.7)',  borderRadius:4},
-    {label:'Cho vay (tr.đ)', data:vtD, backgroundColor:'rgba(138,98,0,.6)',   borderRadius:4},
-    {label:'Nợ (tr.đ)',      data:noD, backgroundColor:'rgba(139,30,45,.55)', borderRadius:4}
+    {label:'Tài sản', data:tsD, backgroundColor:'rgba(45,106,79,.7)',  borderRadius:4},
+    {label:'Cho vay', data:vtD, backgroundColor:'rgba(138,98,0,.6)',   borderRadius:4},
+    {label:'Nợ',      data:noD, backgroundColor:'rgba(139,30,45,.55)', borderRadius:4}
   ]},{scales:{x:{ticks:{font:{size:10}}},y:{beginAtZero:true}}});
 }
 
