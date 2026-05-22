@@ -297,6 +297,15 @@ textarea{resize:none;min-height:52px;}
 .btn-chuyen-hoa:hover{background:var(--x);color:#fff;}
 .btn-chuyen-hoa.done{border-color:var(--bd);background:#f0f0f0;color:#888;cursor:default;}
 
+/* ── STATS TABLE ── */
+.tk-tr td{padding:10px 16px;border-bottom:1px solid var(--bd);vertical-align:middle;}
+.tk-tr:last-child td{border-bottom:none;}
+.tk-tr:hover td{background:var(--bg);}
+.tk-foot td{padding:11px 16px;font-weight:600;background:var(--bg);border-top:2px solid var(--bd2);}
+.tk-num{font-family:var(--serif);font-size:15px;font-weight:600;}
+.tk-pos{color:var(--x);}.tk-neg{color:var(--r);}.tk-neu{color:var(--ink3);}
+.tk-nl-pos{color:#7c3aed;}.tk-nl-neg{color:var(--r);}
+
 /* ── GOAL CARD ── */
 .goal-item{padding:12px 16px;border-bottom:1px solid var(--bd);}
 .goal-item:last-child{border-bottom:none;}
@@ -763,53 +772,153 @@ textarea{resize:none;min-height:52px;}
 
 <!-- ═══ THỐNG KÊ ═══ -->
 <div id="tab-thong-ke" class="page">
-  <!-- Month selector for Thống Kê -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+  <!-- Header + bộ chọn thời gian -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
     <div style="font-size:13px;font-weight:600;color:var(--ink);">📊 Thống Kê</div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span style="font-size:12px;color:var(--ink3);">Chọn tháng:</span>
-      <input type="month" id="tk-month-picker" 
-        style="font-size:12px;padding:5px 10px;border:1px solid var(--bd2);border-radius:8px;background:var(--card);font-family:var(--sans);color:var(--ink);"
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="font-size:12px;color:var(--ink3);">Tháng:</span>
+      <input type="month" id="tk-month-picker"
+        style="font-size:12px;padding:4px 8px;border:1px solid var(--bd2);border-radius:8px;background:var(--card);font-family:var(--sans);color:var(--ink);"
         onchange="onTKMonthChange(this.value)">
-      <button class="btn btn-g" onclick="onTKMonthChange('')" title="Về tháng hiện tại">Tháng này</button>
+      <button class="btn btn-g" onclick="onTKMonthChange('')">Tháng này</button>
+      <span style="font-size:12px;color:var(--ink3);margin-left:6px;">Biểu đồ:</span>
+      <select id="tk-range" onchange="renderTK()" style="font-size:12px;padding:4px 8px;border:1px solid var(--bd2);border-radius:8px;background:var(--card);font-family:var(--sans);">
+        <option value="6">6 tháng</option>
+        <option value="12">12 tháng</option>
+      </select>
     </div>
   </div>
 
-
-
-  <div class="sg4" style="margin-bottom:14px;" id="tk-stats"></div>
-
-  <!-- Thu theo danh mục -->
+  <!-- BLOCK 1: Kế toán tháng -->
   <div class="card" style="margin-bottom:14px;">
-    <div class="card-hdr"><span class="card-title" id="tk-thu-title">💚 Thu Theo Danh Mục</span></div>
-    <div style="display:grid;grid-template-columns:220px 1fr;gap:0;align-items:center;">
-      <div style="padding:14px;"><div style="height:200px;position:relative;"><canvas id="chart-thu-cat" role="img" aria-label="Thu theo danh mục">Thu theo danh mục.</canvas></div></div>
-      <div id="thu-cat-detail" style="padding:14px 20px;"></div>
+    <div class="card-hdr"><span class="card-title">📒 Kế Toán Tháng</span><span id="tk-month-lbl" style="font-size:11px;color:var(--ink3);"></span></div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:var(--bg);">
+            <th style="padding:10px 16px;text-align:left;font-weight:600;color:var(--ink3);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd);">Hạng mục</th>
+            <th style="padding:10px 16px;text-align:right;font-weight:600;color:var(--x);font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--bd);">THU (+)</th>
+            <th style="padding:10px 16px;text-align:right;font-weight:600;color:var(--r);font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--bd);">CHI (−)</th>
+          </tr>
+        </thead>
+        <tbody id="tk-kt-body"></tbody>
+        <tfoot id="tk-kt-foot"></tfoot>
+      </table>
     </div>
   </div>
 
+  <!-- BLOCK 2: Năng lượng tiền tháng -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hdr"><span class="card-title">⚡ Năng Lượng Tiền Tháng</span></div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:var(--bg);">
+            <th style="padding:10px 16px;text-align:left;font-weight:600;color:var(--ink3);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd);">Hạng mục</th>
+            <th style="padding:10px 16px;text-align:right;font-weight:600;color:var(--x);font-size:11px;border-bottom:1px solid var(--bd);">💚 Xanh (+)</th>
+            <th style="padding:10px 16px;text-align:right;font-weight:600;color:var(--r);font-size:11px;border-bottom:1px solid var(--bd);">❤️ Đỏ (−)</th>
+            <th style="padding:10px 16px;text-align:right;font-weight:600;color:#7c3aed;font-size:11px;border-bottom:1px solid var(--bd);">⚡ NL Ròng</th>
+          </tr>
+        </thead>
+        <tbody id="tk-nl-body"></tbody>
+        <tfoot id="tk-nl-foot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- BLOCK 3: Biểu đồ thu chi + NL theo thời gian -->
   <div class="two-col" style="margin-bottom:14px;">
     <div class="card">
-      <div class="card-hdr"><span class="card-title">📈 Thu Chi 6 Tháng Gần Nhất</span></div>
-      <div style="padding:14px;"><div class="chart-wrap"><canvas id="chart-tc6" role="img" aria-label="Thu chi 6 tháng">Thu chi 6 tháng.</canvas></div></div>
+      <div class="card-hdr"><span class="card-title" id="tk-chart-tc-title">📈 Thu Chi</span></div>
+      <div style="padding:14px;"><div class="chart-wrap"><canvas id="chart-tc6"></canvas></div></div>
     </div>
     <div class="card">
-      <div class="card-hdr"><span class="card-title">🌿 Tiền Xanh / Vàng / Đỏ</span></div>
-      <div style="padding:14px;display:flex;align-items:center;gap:10px;">
-        <div style="height:180px;position:relative;flex-shrink:0;width:180px;"><canvas id="chart-nl" role="img" aria-label="Tỷ lệ NL">NL.</canvas></div>
-        <div id="nl-leg" style="flex:1;"></div>
+      <div class="card-hdr"><span class="card-title" id="tk-chart-nl-title">⚡ Năng Lượng Tiền</span></div>
+      <div style="padding:14px;"><div class="chart-wrap"><canvas id="chart-nl6"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- BLOCK 4: Danh mục -->
+  <div class="two-col" style="margin-bottom:14px;">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title" id="tk-thu-title">💚 Thu Theo Danh Mục</span></div>
+      <div style="display:grid;grid-template-columns:200px 1fr;gap:0;align-items:center;">
+        <div style="padding:14px;"><div style="height:180px;position:relative;"><canvas id="chart-thu-cat"></canvas></div></div>
+        <div id="thu-cat-detail" style="padding:14px;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">🏷️ Chi Theo Danh Mục</span></div>
+      <div style="padding:14px;"><div class="chart-wrap"><canvas id="chart-cat"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- BLOCK 5: Nợ, Cho vay, Tài sản -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hdr"><span class="card-title">🏦 Bảng Cân Đối Tài Sản</span></div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:var(--bg);">
+            <th style="padding:10px 16px;text-align:left;font-weight:600;color:var(--ink3);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd);">Hạng mục</th>
+            <th style="padding:10px 16px;text-align:left;font-weight:600;color:var(--ink3);font-size:11px;border-bottom:1px solid var(--bd);">Chi tiết</th>
+            <th style="padding:10px 16px;text-align:right;font-weight:600;color:var(--ink3);font-size:11px;border-bottom:1px solid var(--bd);">Giá trị</th>
+            <th style="padding:10px 16px;text-align:right;font-weight:600;color:var(--ink3);font-size:11px;border-bottom:1px solid var(--bd);">NL</th>
+          </tr>
+        </thead>
+        <tbody id="tk-balance-body"></tbody>
+        <tfoot id="tk-balance-foot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- BLOCK 6: Quỹ Bảo An -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hdr">
+      <span class="card-title">🛡️ Quỹ Bảo An</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--ink3);">Xem theo:</span>
+        <select id="tk-fund-range" onchange="renderTKFundCharts()" style="font-size:11px;padding:3px 8px;border:1px solid var(--bd2);border-radius:6px;background:var(--card);font-family:var(--sans);">
+          <option value="3">3 tháng</option>
+          <option value="6" selected>6 tháng</option>
+          <option value="9">9 tháng</option>
+          <option value="12">12 tháng</option>
+        </select>
+      </div>
+    </div>
+    <!-- Tổng quỹ -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid var(--bd);" id="tk-fund-summary"></div>
+    <!-- Biểu đồ -->
+    <div class="two-col" style="padding:14px;gap:12px;">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Số dư tích lũy (tr.đ)</div>
+        <div class="chart-wrap"><canvas id="chart-fund-bal"></canvas></div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Nạp / Rút từng tháng (tr.đ)</div>
+        <div class="chart-wrap"><canvas id="chart-fund-flow"></canvas></div>
       </div>
     </div>
   </div>
 
-  <div class="two-col">
-    <div class="card">
-      <div class="card-hdr"><span class="card-title">🏷️ Chi Theo Danh Mục</span></div>
-      <div style="padding:14px;"><div class="chart-wrap"><canvas id="chart-cat" role="img" aria-label="Chi theo danh mục">Chi theo danh mục.</canvas></div></div>
+  <!-- BLOCK 7: Xu hướng Nợ / Cho vay / Tài sản -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hdr">
+      <span class="card-title">📉 Xu Hướng Nợ · Cho Vay · Tài Sản</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--ink3);">Xem theo:</span>
+        <select id="tk-nts-range" onchange="renderTKNtsCharts()" style="font-size:11px;padding:3px 8px;border:1px solid var(--bd2);border-radius:6px;background:var(--card);font-family:var(--sans);">
+          <option value="3">3 tháng</option>
+          <option value="6" selected>6 tháng</option>
+          <option value="9">9 tháng</option>
+          <option value="12">12 tháng</option>
+        </select>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title">🏠 Thu Chi Theo 5NN</span></div>
-      <div style="padding:14px;"><div class="chart-wrap"><canvas id="chart-nn" role="img" aria-label="Thu chi theo 5NN">Thu chi theo 5NN.</canvas></div></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid var(--bd);" id="tk-nts-summary"></div>
+    <div style="padding:14px;">
+      <div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Tài sản · Cho vay · Nợ theo tháng (tr.đ)</div>
+      <div class="chart-wrap"><canvas id="chart-nts-trend"></canvas></div>
     </div>
   </div>
 </div>
@@ -1299,6 +1408,32 @@ function markDone(type,id){
   const item=D[type].find(i=>i.id===id);
   if(item){item.done=true;item.con=0;}
   save();renderAll();toast('Đã đánh dấu xong ✓');
+}
+
+// ═══ GIA HẠN ═══
+function showExtend(type, id){
+  const el = document.getElementById('extend-form-'+id);
+  if(!el) return;
+  const isOpen = el.style.display==='flex';
+  el.style.display = isOpen ? 'none' : 'flex';
+  if(!isOpen){
+    const r = D[type].find(x=>x.id===id);
+    const dateEl = document.getElementById('extend-date-'+id);
+    if(dateEl && r?.han) dateEl.value = r.han;
+  }
+}
+
+function saveExtend(type, id){
+  const r = D[type].find(x=>x.id===id);
+  if(!r) return;
+  const newHan = document.getElementById('extend-date-'+id)?.value;
+  const note   = document.getElementById('extend-note-'+id)?.value||'';
+  if(!newHan){ toast('Chọn hạn mới'); return; }
+  if(!r.extensions) r.extensions = [];
+  r.extensions.push({ date: today(), oldHan: r.han||'–', newHan, note });
+  r.han = newHan;
+  save(); renderNTS();
+  toast('Đã gia hạn đến '+newHan+' ✓');
 }
 
 // ═══ ADD ASSET ═══
@@ -2072,7 +2207,21 @@ function renderNTS(){
             <span style="font-size:12px;font-weight:500;">${nlDot(r.nl)} ${r.note||'Khoản vay '+r.ngay}</span>
             <span class="amt ${type==='no'?'aout':'ain'}" style="font-size:14px;">${fmt(r.con)}</span>
           </div>
-          <div style="font-size:11px;color:var(--ink3);">Gốc: ${fmtF(r.goc)} · Ngày vay: ${r.ngay||'–'} · Hạn: <span style="color:${isLate(r.han)&&!r.done?'var(--r)':'inherit'}">${r.han||'–'}</span>${r.ls?' · Lãi: '+r.ls+'%':''}</div>
+          <div style="font-size:11px;color:var(--ink3);">Gốc: ${fmtF(r.goc)} · Ngày vay: ${r.ngay||'–'} · Hạn: <span style="color:${isLate(r.han)&&!r.done?'var(--r)':'inherit'}">${r.han||'–'}</span>${r.ls?' · Lãi: '+r.ls+'%':''}&nbsp;
+            ${!r.done?`<button onclick="showExtend('${type}',${r.id})" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:1px 7px;cursor:pointer;font-size:10px;color:var(--ink2);margin-left:4px;">📅 Gia hạn</button>`:''}
+          </div>
+          <div id="extend-form-${r.id}" style="display:none;margin-top:6px;background:var(--bg);padding:7px;border-radius:7px;display:none;gap:6px;align-items:flex-end;flex-wrap:wrap;">
+            <div><label style="font-size:10px;">Hạn mới</label><input type="date" id="extend-date-${r.id}" style="font-size:11px;padding:3px 6px;width:130px;"></div>
+            <div style="flex:1;min-width:100px"><label style="font-size:10px;">Lý do</label><input type="text" id="extend-note-${r.id}" placeholder="Gia hạn vì..." style="font-size:11px;padding:3px 6px;"></div>
+            <button class="btn btn-x" style="font-size:11px;padding:3px 9px;" onclick="saveExtend('${type}',${r.id})">Lưu</button>
+            <button class="btn btn-g" style="font-size:11px;padding:3px 9px;" onclick="document.getElementById('extend-form-${r.id}').style.display='none'">Hủy</button>
+          </div>
+          ${(r.extensions||[]).length?`<div style="margin-top:4px;">
+            <div style="font-size:10px;font-weight:600;color:var(--ink3);margin-bottom:2px;">LỊCH SỬ GIA HẠN:</div>
+            ${(r.extensions||[]).map(e=>`<div style="font-size:10px;color:var(--ink3);padding:2px 0;border-top:1px solid var(--bd);">
+              📅 Gia hạn đến <b style="color:var(--ink2)">${e.newHan}</b> · ${e.date} ${e.note?'· '+e.note:''}
+            </div>`).join('')}
+          </div>`:''}
           ${payments.length?`<div style="margin-top:6px;">
             <div style="font-size:10px;font-weight:600;color:var(--ink3);margin-bottom:3px;">LỊCH SỬ ${type==='no'?'TRẢ':'NHẬN'}:</div>
             ${payments.map((p,pi)=>`<div style="display:flex;gap:8px;font-size:11px;padding:2px 0;border-top:1px solid var(--bd);">
@@ -2138,103 +2287,344 @@ function onTKMonthChange(val){
 }
 
 function renderTK(){
-  // Sync picker
-  const picker=document.getElementById('tk-month-picker');
-  if(picker && !picker.value) picker.value=tkMonth;
+  const picker = document.getElementById('tk-month-picker');
+  if(picker && !picker.value) picker.value = tkMonth;
+  const range = parseInt(document.getElementById('tk-range')?.value || '6');
 
-  const inM=x=>x.date&&x.date.startsWith(tkMonth);
-  const thuM=D.thu.filter(inM),chiM=D.chi.filter(inM);
+  const inM = x => x.date && x.date.startsWith(tkMonth);
+  const thuM = D.thu.filter(inM), chiM = D.chi.filter(inM);
+  const [ty,tm] = tkMonth.split('-');
+  const tkLbl = `Tháng ${parseInt(tm)}/${ty}`;
+  const lblEl = document.getElementById('tk-month-lbl');
+  if(lblEl) lblEl.textContent = tkLbl;
 
-  const [ty,tm]=tkMonth.split('-');
-  const tkLbl=`tháng ${parseInt(tm)}/${ty}`;
+  // ── Helpers NL ──
+  const nlSum = (arr, color) => arr.filter(x=>x.nl===color).reduce((a,x)=>a+x.amt, 0);
 
-  const noT=D.no.filter(d=>!d.done).reduce((a,d)=>a+d.con,0);
-  const tsT=D.ts.reduce((a,t)=>a+t.val,0);
-  const thuT=thuM.reduce((a,t)=>a+t.amt,0),chiT=chiM.reduce((a,t)=>a+t.amt,0);
-  const conlai=thuT-chiT;
-  document.getElementById('tk-stats').innerHTML=`
-    <div class="stat"><div class="stat-lbl">Tổng Thu</div><div class="stat-val cv">${fmt(thuT)}</div><div class="stat-sub">${thuM.length} giao dịch</div></div>
-    <div class="stat"><div class="stat-lbl">Tổng Chi</div><div class="stat-val rv">${fmt(chiT)}</div><div class="stat-sub">${chiM.length} giao dịch</div></div>
-    <div class="stat"><div class="stat-lbl">Còn Lại</div><div class="stat-val ${conlai>=0?'cv':'rv'}">${fmt(conlai)}</div><div class="stat-sub">${conlai>=0?'Dư':'Thâm hụt'}</div></div>
-    <div class="stat"><div class="stat-lbl">Tài Sản Ròng</div><div class="stat-val ${tsT-noT>=0?'cv':'rv'}">${fmt(tsT-noT)}</div></div>`;
+  // ── BLOCK 1: Kế toán ──
+  const thuT = thuM.reduce((a,x)=>a+x.amt, 0);
+  const chiT = chiM.reduce((a,x)=>a+x.amt, 0);
+  const conlai = thuT - chiT;
 
-  // Thu theo danh mục (donut)
-  const thuCats=[...new Set(thuM.map(x=>x.cat||'Khác'))];
-  const thuCatAmts=thuCats.map(c=>thuM.filter(x=>(x.cat||'Khác')===c).reduce((a,x)=>a+x.amt,0));
-  const thuCatCols=thuCats.map((_,i)=>`hsl(${[160,190,130,100,220,60,170][i%7]},45%,42%)`);
-  const thuTitle=document.getElementById('tk-thu-title');
-  if(thuTitle) thuTitle.textContent=`💚 Thu Theo Danh Mục – ${tkLbl}`;
-  if(thuCats.length){
+  // Kế toán theo danh mục thu
+  const thuCats = [...new Set(thuM.map(x=>x.cat||'Khác'))];
+  const chiCats  = [...new Set(chiM.map(x=>x.cat||'Khác'))];
+  const allCats  = [...new Set([...thuCats,...chiCats])];
+
+  const ktBody = document.getElementById('tk-kt-body');
+  const ktFoot = document.getElementById('tk-kt-foot');
+  if(ktBody){
+    if(!allCats.length){
+      ktBody.innerHTML = `<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--ink3);font-size:12px;">Chưa có dữ liệu tháng này</td></tr>`;
+    } else {
+      ktBody.innerHTML = allCats.map(cat=>{
+        const thuC = thuM.filter(x=>(x.cat||'Khác')===cat).reduce((a,x)=>a+x.amt,0);
+        const chiC  = chiM.filter(x=>(x.cat||'Khác')===cat).reduce((a,x)=>a+x.amt,0);
+        return `<tr class="tk-tr">
+          <td style="font-size:13px;">${cat}</td>
+          <td style="text-align:right;">${thuC?`<span class="tk-num tk-pos">+${fmt(thuC)}</span>`:'<span class="tk-neu">–</span>'}</td>
+          <td style="text-align:right;">${chiC?`<span class="tk-num tk-neg">−${fmt(chiC)}</span>`:'<span class="tk-neu">–</span>'}</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+  if(ktFoot){
+    ktFoot.innerHTML = `<tr class="tk-foot">
+      <td style="font-size:12px;color:var(--ink3);">Tổng · Còn lại: <span class="tk-num ${conlai>=0?'tk-pos':'tk-neg'}">${conlai>=0?'+':''}${fmt(conlai)}</span></td>
+      <td style="text-align:right;"><span class="tk-num tk-pos">+${fmt(thuT)}</span><div class="tk-sub">${thuM.length} giao dịch</div></td>
+      <td style="text-align:right;"><span class="tk-num tk-neg">−${fmt(chiT)}</span><div class="tk-sub">${chiM.length} giao dịch</div></td>
+    </tr>`;
+  }
+
+  // ── BLOCK 2: Năng lượng ──
+  const thuX = nlSum(thuM,'xanh'), thuD = nlSum(thuM,'do');
+  const chiX  = nlSum(chiM,'xanh'),  chiD  = nlSum(chiM,'do');
+  const thuNL = thuX - thuD;   // NL ròng thu
+  const chiNL  = chiX  - chiD;  // NL ròng chi
+  const totalNL = thuNL - chiNL; // NL tổng tháng
+
+  const nlBody = document.getElementById('tk-nl-body');
+  const nlFoot = document.getElementById('tk-nl-foot');
+
+  const nlRow = (label, xanh, do_, ròng) => `<tr class="tk-tr">
+    <td style="font-size:13px;">${label}</td>
+    <td style="text-align:right;"><span class="tk-num tk-pos">+${fmt(xanh)}</span></td>
+    <td style="text-align:right;"><span class="tk-num tk-neg">−${fmt(do_)}</span></td>
+    <td style="text-align:right;"><span class="tk-num ${ròng>=0?'tk-nl-pos':'tk-neg'}">${ròng>=0?'+':''}${fmt(ròng)}</span></td>
+  </tr>`;
+
+  if(nlBody){
+    nlBody.innerHTML = nlRow('Thu vào 💚', thuX, thuD, thuNL)
+                     + nlRow('Chi ra 🏷️',  chiX,  chiD,  chiNL);
+  }
+  if(nlFoot){
+    nlFoot.innerHTML = `<tr class="tk-foot">
+      <td style="font-size:12px;color:var(--ink3);">Tổng NL tháng</td>
+      <td style="text-align:right;"><span class="tk-num tk-pos">+${fmt(thuX+chiX)}</span></td>
+      <td style="text-align:right;"><span class="tk-num tk-neg">−${fmt(thuD+chiD)}</span></td>
+      <td style="text-align:right;font-size:15px;"><span class="tk-num ${totalNL>=0?'tk-nl-pos':'tk-neg'}">${totalNL>=0?'+':''}${fmt(totalNL)}</span></td>
+    </tr>`;
+  }
+
+  // ── BLOCK 3: Biểu đồ theo range ──
+  const months=[], inD=[], outD=[], nlXD=[], nlDD=[];
+  for(let i=range-1; i>=0; i--){
+    const d=new Date(); d.setMonth(d.getMonth()-i);
+    const m=d.toISOString().slice(0,7);
+    const lbl=`${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}`;
+    months.push(lbl);
+    const tArr=D.thu.filter(x=>x.date?.startsWith(m));
+    const cArr=D.chi.filter(x=>x.date?.startsWith(m));
+    inD.push(Math.round(tArr.reduce((a,x)=>a+x.amt,0)/1e6*10)/10);
+    outD.push(Math.round(cArr.reduce((a,x)=>a+x.amt,0)/1e6*10)/10);
+    const txV=nlSum(tArr,'xanh'), tdV=nlSum(tArr,'do');
+    const cxV=nlSum(cArr,'xanh'), cdV=nlSum(cArr,'do');
+    nlXD.push(Math.round((txV+cxV)/1e6*10)/10);
+    nlDD.push(Math.round((tdV+cdV)/1e6*10)/10);
+  }
+
+  const rangeTitle = range===6?'6 Tháng Gần Nhất':'12 Tháng Gần Nhất';
+  const tcTitle = document.getElementById('tk-chart-tc-title');
+  const nlTitle = document.getElementById('tk-chart-nl-title');
+  if(tcTitle) tcTitle.textContent = `📈 Thu Chi – ${rangeTitle}`;
+  if(nlTitle) nlTitle.textContent = `⚡ Năng Lượng – ${rangeTitle}`;
+
+  mkChart('chart-tc6','bar',{labels:months, datasets:[
+    {label:'Thu (tr.đ)',data:inD,backgroundColor:'rgba(45,106,79,.7)',borderRadius:4},
+    {label:'Chi (tr.đ)',data:outD,backgroundColor:'rgba(139,30,45,.55)',borderRadius:4}
+  ]},{scales:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{beginAtZero:true}}});
+
+  mkChart('chart-nl6','bar',{labels:months, datasets:[
+    {label:'NL Xanh (tr.đ)',data:nlXD,backgroundColor:'rgba(45,106,79,.7)',borderRadius:4},
+    {label:'NL Đỏ (tr.đ)', data:nlDD,backgroundColor:'rgba(139,30,45,.55)',borderRadius:4}
+  ]},{scales:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{beginAtZero:true}}});
+
+  // ── BLOCK 4: Danh mục thu (donut) ──
+  const thuCatsU=[...new Set(thuM.map(x=>x.cat||'Khác'))];
+  const thuCatAmts=thuCatsU.map(c=>thuM.filter(x=>(x.cat||'Khác')===c).reduce((a,x)=>a+x.amt,0));
+  const thuCatCols=thuCatsU.map((_,i)=>`hsl(${[160,190,130,100,220,60,170][i%7]},45%,42%)`);
+  const thuTitleEl=document.getElementById('tk-thu-title');
+  if(thuTitleEl) thuTitleEl.textContent=`💚 Thu Theo Danh Mục – ${tkLbl}`;
+  if(thuCatsU.length){
     mkChart('chart-thu-cat','doughnut',{
-      labels:thuCats,
+      labels:thuCatsU,
       datasets:[{data:thuCatAmts,backgroundColor:thuCatCols,borderWidth:2,borderColor:'#fff'}]
     },{plugins:{legend:{display:false}}});
     const detail=document.getElementById('thu-cat-detail');
     if(detail){
       const total=thuCatAmts.reduce((a,x)=>a+x,0)||1;
-      detail.innerHTML=thuCats.map((c,i)=>`
+      detail.innerHTML=thuCatsU.map((c,i)=>`
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <span style="width:10px;height:10px;border-radius:2px;background:${thuCatCols[i]};flex-shrink:0;"></span>
+          <span style="width:9px;height:9px;border-radius:2px;background:${thuCatCols[i]};flex-shrink:0;"></span>
           <span style="flex:1;font-size:12px;">${c}</span>
           <span style="font-size:12px;font-weight:600;color:var(--x);">${fmt(thuCatAmts[i])}</span>
-          <span style="font-size:11px;color:var(--ink3);min-width:32px;text-align:right;">${Math.round(thuCatAmts[i]/total*100)}%</span>
+          <span style="font-size:11px;color:var(--ink3);min-width:30px;text-align:right;">${Math.round(thuCatAmts[i]/total*100)}%</span>
         </div>`).join('');
     }
   } else {
     const c=document.getElementById('chart-thu-cat');if(c&&c._ch){c._ch.destroy();c._ch=null;}
-    const d=document.getElementById('thu-cat-detail');if(d)d.innerHTML='<div style="color:var(--ink3);font-size:12px;">Chưa có dữ liệu thu tháng này</div>';
+    const d=document.getElementById('thu-cat-detail');if(d)d.innerHTML='<div style="color:var(--ink3);font-size:12px;padding:8px;">Chưa có dữ liệu</div>';
   }
 
-  // 6 tháng
-  const months=[],inD=[],outD=[];
-  for(let i=5;i>=0;i--){
-    const d=new Date();d.setMonth(d.getMonth()-i);
-    const m=d.toISOString().slice(0,7);
-    months.push(m.slice(5)+'/'+m.slice(2,4));
-    inD.push(Math.round(D.thu.filter(x=>x.date?.startsWith(m)).reduce((a,t)=>a+t.amt,0)/1e6*10)/10);
-    outD.push(Math.round(D.chi.filter(x=>x.date?.startsWith(m)).reduce((a,t)=>a+t.amt,0)/1e6*10)/10);
-  }
-  mkChart('chart-tc6','bar',{labels:months,datasets:[
-    {label:'Thu',data:inD,backgroundColor:'rgba(45,106,79,.7)',borderRadius:4},
-    {label:'Chi',data:outD,backgroundColor:'rgba(139,30,45,.55)',borderRadius:4}
-  ]},{scales:{x:{ticks:{autoSkip:false}},y:{beginAtZero:true}}});
-
-  // NL donut
-  const all=[...D.thu,...D.chi];
-  const xnh=all.filter(t=>t.nl==='xanh').reduce((a,t)=>a+t.amt,0);
-  const vng=all.filter(t=>t.nl==='vang').reduce((a,t)=>a+t.amt,0);
-  const doo=all.filter(t=>t.nl==='do').reduce((a,t)=>a+t.amt,0);
-  const tot2=xnh+vng+doo||1;
-  mkChart('chart-nl','doughnut',{
-    labels:['Xanh','Vàng','Đỏ'],
-    datasets:[{data:[xnh,vng,doo],backgroundColor:['#2d6a4f','#8a6200','#8b1e2d'],borderWidth:2,borderColor:'#fff'}]
-  },{});
-  document.getElementById('nl-leg').innerHTML=[['#2d6a4f','Tiền Xanh',xnh],['#8a6200','Tiền Vàng',vng],['#8b1e2d','Tiền Đỏ',doo]]
-    .map(([c,l,v])=>`<div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;">
-      <span style="width:11px;height:11px;border-radius:3px;background:${c};flex-shrink:0"></span>
-      <div><div style="font-size:12px;font-weight:500">${l}</div>
-      <div style="font-size:11px;color:var(--ink3)">${fmt(v)} · ${Math.round(v/tot2*100)}%</div></div>
-    </div>`).join('');
-
-  // Cat chart
+  // Danh mục chi (bar ngang)
   const cats=[...new Set(chiM.map(x=>x.cat||'Khác'))];
   const catAmts=cats.map(c=>Math.round(chiM.filter(x=>(x.cat||'Khác')===c).reduce((a,x)=>a+x.amt,0)/1e3)/1e3);
   const catCols=cats.map((_,i)=>`hsl(${[160,45,220,30,270,10,190,90,340,130,60,200][i%12]},38%,45%)`);
   if(cats.length){
-    mkChart('chart-cat','bar',{labels:cats,datasets:[{label:'Chi (tr)',data:catAmts,backgroundColor:catCols,borderRadius:3}]},
-      {indexAxis:'y',scales:{x:{beginAtZero:true},y:{ticks:{autoSkip:false}}}});
+    mkChart('chart-cat','bar',{labels:cats,datasets:[{label:'Chi (tr.đ)',data:catAmts,backgroundColor:catCols,borderRadius:3}]},
+      {indexAxis:'y',scales:{x:{beginAtZero:true},y:{ticks:{autoSkip:false,font:{size:11}}}}});
   } else {
     const c=document.getElementById('chart-cat');if(c&&c._ch){c._ch.destroy();c._ch=null;}
   }
 
-  // NN chart
-  const nnKeys=Object.keys(NN_S);
-  const nnIn=nnKeys.map(k=>Math.round(D.thu.filter(x=>inM(x)&&x.nn===k).reduce((a,t)=>a+t.amt,0)/1e6*10)/10);
-  const nnOut=nnKeys.map(k=>Math.round(D.chi.filter(x=>inM(x)&&x.nn===k).reduce((a,t)=>a+t.amt,0)/1e6*10)/10);
-  mkChart('chart-nn','bar',{labels:nnKeys.map(k=>NN_S[k]),datasets:[
-    {label:'Thu',data:nnIn,backgroundColor:'rgba(45,106,79,.65)',borderRadius:3},
-    {label:'Chi',data:nnOut,backgroundColor:'rgba(139,30,45,.45)',borderRadius:3}
-  ]},{scales:{x:{ticks:{autoSkip:false}},y:{beginAtZero:true}}});
+  // ── BLOCK 5: Bảng cân đối tài sản ──
+  const nlDotS = nl => nl==='xanh'?'💚':nl==='do'?'❤️':'💛';
+
+  const balBody = document.getElementById('tk-balance-body');
+  const balFoot = document.getElementById('tk-balance-foot');
+  if(!balBody) return;
+
+  let rows = '';
+
+  // Nhóm: TÀI SẢN
+  rows += `<tr><td colspan="4" style="padding:8px 16px;background:var(--xbg);font-size:11px;font-weight:600;color:var(--x);text-transform:uppercase;letter-spacing:.5px;">💎 Tài Sản</td></tr>`;
+  if(D.ts.length){
+    const tsTotal = D.ts.reduce((a,x)=>a+x.val,0);
+    D.ts.forEach(r=>{
+      rows += `<tr class="tk-tr">
+        <td style="font-size:12px;color:var(--ink3);padding-left:24px;">${TS_L[r.loai]||r.loai}</td>
+        <td style="font-size:13px;">${r.ten}</td>
+        <td style="text-align:right;"><span class="tk-num tk-pos">+${fmt(r.val)}</span></td>
+        <td style="text-align:right;">${nlDotS(r.nl)}</td>
+      </tr>`;
+    });
+    rows += `<tr style="background:var(--bg);"><td colspan="2" style="padding:8px 16px;font-size:12px;font-weight:600;color:var(--x);">Tổng tài sản</td>
+      <td style="text-align:right;padding:8px 16px;"><span class="tk-num tk-pos">+${fmt(tsTotal)}</span></td><td></td></tr>`;
+  } else {
+    rows += `<tr><td colspan="4" style="padding:10px 24px;color:var(--ink3);font-size:12px;">Chưa có tài sản</td></tr>`;
+  }
+
+  // Nhóm: CHO VAY
+  rows += `<tr><td colspan="4" style="padding:8px 16px;background:var(--xbg);font-size:11px;font-weight:600;color:var(--x);text-transform:uppercase;letter-spacing:.5px;">💚 Người Tôi Hỗ Trợ (Cho vay)</td></tr>`;
+  const vtActive = D.vaytoi.filter(x=>!x.done);
+  if(vtActive.length){
+    const vtTotal = vtActive.reduce((a,x)=>a+x.con,0);
+    vtActive.forEach(r=>{
+      const overdue = r.han && new Date(r.han)<new Date();
+      rows += `<tr class="tk-tr">
+        <td style="font-size:12px;color:var(--ink3);padding-left:24px;">${overdue?'⚠️ Quá hạn':'Đang cho vay'}</td>
+        <td style="font-size:13px;">${r.chu} ${r.han?`<span style="font-size:10px;color:var(--ink3);">· hạn ${r.han}</span>`:''}
+        </td>
+        <td style="text-align:right;"><span class="tk-num tk-pos">+${fmt(r.con)}</span><div class="tk-sub">gốc ${fmt(r.goc)}</div></td>
+        <td style="text-align:right;">${nlDotS(r.nl||'xanh')}</td>
+      </tr>`;
+    });
+    rows += `<tr style="background:var(--bg);"><td colspan="2" style="padding:8px 16px;font-size:12px;font-weight:600;color:var(--x);">Tổng cho vay chưa thu</td>
+      <td style="text-align:right;padding:8px 16px;"><span class="tk-num tk-pos">+${fmt(vtTotal)}</span></td><td></td></tr>`;
+  } else {
+    rows += `<tr><td colspan="4" style="padding:10px 24px;color:var(--ink3);font-size:12px;">Không có khoản cho vay</td></tr>`;
+  }
+
+  // Nhóm: NỢ
+  rows += `<tr><td colspan="4" style="padding:8px 16px;background:var(--rbg);font-size:11px;font-weight:600;color:var(--r);text-transform:uppercase;letter-spacing:.5px;">🔴 Người Trợ Giúp Tôi (Nợ)</td></tr>`;
+  const noActive = D.no.filter(x=>!x.done);
+  if(noActive.length){
+    const noTotal = noActive.reduce((a,x)=>a+x.con,0);
+    noActive.forEach(r=>{
+      const overdue = r.han && new Date(r.han)<new Date();
+      rows += `<tr class="tk-tr">
+        <td style="font-size:12px;color:var(--ink3);padding-left:24px;">${overdue?'⚠️ Quá hạn':'Đang nợ'}${r.ls?` · ${r.ls}%/năm`:''}</td>
+        <td style="font-size:13px;">${r.chu} ${r.han?`<span style="font-size:10px;color:var(--ink3);">· hạn ${r.han}</span>`:''}
+        </td>
+        <td style="text-align:right;"><span class="tk-num tk-neg">−${fmt(r.con)}</span><div class="tk-sub">gốc ${fmt(r.goc)}</div></td>
+        <td style="text-align:right;">${nlDotS(r.nl||'xanh')}</td>
+      </tr>`;
+    });
+    rows += `<tr style="background:var(--rbg);"><td colspan="2" style="padding:8px 16px;font-size:12px;font-weight:600;color:var(--r);">Tổng nợ chưa trả</td>
+      <td style="text-align:right;padding:8px 16px;"><span class="tk-num tk-neg">−${fmt(noTotal)}</span></td><td></td></tr>`;
+  } else {
+    rows += `<tr><td colspan="4" style="padding:10px 24px;color:var(--ink3);font-size:12px;">Không có khoản nợ</td></tr>`;
+  }
+
+  balBody.innerHTML = rows;
+
+  // Tổng cân đối
+  const tsT2 = D.ts.reduce((a,x)=>a+x.val,0);
+  const vtT2 = D.vaytoi.filter(x=>!x.done).reduce((a,x)=>a+x.con,0);
+  const noT2 = D.no.filter(x=>!x.done).reduce((a,x)=>a+x.con,0);
+  const rong = tsT2 + vtT2 - noT2;
+
+  if(balFoot){
+    balFoot.innerHTML = `<tr class="tk-foot">
+      <td colspan="2" style="font-size:13px;">🏆 Tài sản ròng = Tài sản + Cho vay − Nợ</td>
+      <td style="text-align:right;" colspan="2">
+        <span class="tk-num ${rong>=0?'tk-pos':'tk-neg'}" style="font-size:18px;">${rong>=0?'+':''}${fmt(rong)}</span>
+      </td>
+    </tr>`;
+  }
+
+  // Gọi biểu đồ quỹ & xu hướng
+  renderTKFundCharts();
+  renderTKNtsCharts();
+}
+
+// ═══ BIỂU ĐỒ QUỸ BẢO AN ═══
+function renderTKFundCharts(){
+  const range = parseInt(document.getElementById('tk-fund-range')?.value||'6');
+
+  // Tổng quỹ hiện tại
+  const totalAdd = D.funds.filter(f=>f.type==='add').reduce((a,f)=>a+f.amt,0);
+  const totalWd  = D.funds.filter(f=>f.type==='withdraw').reduce((a,f)=>a+f.amt,0);
+  const totalFund = totalAdd - totalWd;
+  const totalTx = D.funds.length;
+  const nlX = D.funds.filter(f=>f.nl==='xanh').reduce((a,f)=>a+(f.type==='add'?f.amt:-f.amt),0);
+
+  const sumEl = document.getElementById('tk-fund-summary');
+  if(sumEl) sumEl.innerHTML = [
+    ['🛡️ Số dư hiện tại', fmt(totalFund), totalFund>=0?'tk-pos':'tk-neg'],
+    ['📥 Tổng đã nạp',    fmt(totalAdd),  'tk-pos'],
+    ['📤 Tổng đã rút',    fmt(totalWd),   'tk-neg'],
+  ].map(([lbl,val,cls])=>`
+    <div style="padding:14px 16px;border-right:1px solid var(--bd);">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--ink3);margin-bottom:4px;">${lbl}</div>
+      <div class="tk-num ${cls}" style="font-size:20px;">${val}</div>
+      <div style="font-size:10px;color:var(--ink3);margin-top:2px;">${totalTx} lần giao dịch · NL ròng: <span class="${nlX>=0?'tk-pos':'tk-neg'}">${nlX>=0?'+':''}${fmt(nlX)}</span></div>
+    </div>`).join('');
+
+  // Tính số dư tích lũy từng tháng (cộng dồn từ đầu đến cuối tháng đó)
+  const months=[], balD=[], napD=[], rutD=[];
+  for(let i=range-1;i>=0;i--){
+    const d=new Date(); d.setMonth(d.getMonth()-i);
+    const m=d.toISOString().slice(0,7);
+    const lbl=`${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}`;
+    months.push(lbl);
+    // Số dư tích lũy = tất cả giao dịch từ đầu đến hết tháng m
+    const cutoff = m+'-31'; // so sánh string YYYY-MM-DD
+    const bal = D.funds.filter(f=>f.date<=cutoff)
+      .reduce((a,f)=>a+(f.type==='add'?f.amt:-f.amt),0);
+    const nap = D.funds.filter(f=>f.date?.startsWith(m)&&f.type==='add').reduce((a,f)=>a+f.amt,0);
+    const rut = D.funds.filter(f=>f.date?.startsWith(m)&&f.type==='withdraw').reduce((a,f)=>a+f.amt,0);
+    balD.push(Math.round(bal/1e6*10)/10);
+    napD.push(Math.round(nap/1e6*10)/10);
+    rutD.push(Math.round(rut/1e6*10)/10);
+  }
+
+  mkChart('chart-fund-bal','line',{labels:months,datasets:[{
+    label:'Số dư (tr.đ)',data:balD,
+    borderColor:'#2d6a4f',backgroundColor:'rgba(45,106,79,.12)',
+    fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#2d6a4f'
+  }]},{scales:{x:{ticks:{font:{size:10}}},y:{beginAtZero:false}}});
+
+  mkChart('chart-fund-flow','bar',{labels:months,datasets:[
+    {label:'Nạp (tr.đ)',data:napD,backgroundColor:'rgba(45,106,79,.7)',borderRadius:4},
+    {label:'Rút (tr.đ)',data:rutD,backgroundColor:'rgba(139,30,45,.55)',borderRadius:4}
+  ]},{scales:{x:{ticks:{font:{size:10}}},y:{beginAtZero:true}}});
+}
+
+// ═══ BIỂU ĐỒ XU HƯỚNG NỢ / CHO VAY / TÀI SẢN ═══
+function renderTKNtsCharts(){
+  const range = parseInt(document.getElementById('tk-nts-range')?.value||'6');
+
+  const tsT  = D.ts.reduce((a,x)=>a+x.val,0);
+  const vtT  = D.vaytoi.filter(x=>!x.done).reduce((a,x)=>a+x.con,0);
+  const noT  = D.no.filter(x=>!x.done).reduce((a,x)=>a+x.con,0);
+  const rong = tsT+vtT-noT;
+
+  const sumEl = document.getElementById('tk-nts-summary');
+  if(sumEl) sumEl.innerHTML = [
+    ['💎 Tài sản',    fmt(tsT),  'tk-pos', D.ts.length+' mục'],
+    ['💚 Cho vay',    fmt(vtT),  'tk-pos', D.vaytoi.filter(x=>!x.done).length+' khoản'],
+    ['🔴 Nợ',         fmt(noT),  'tk-neg', D.no.filter(x=>!x.done).length+' khoản'],
+  ].map(([lbl,val,cls,sub])=>`
+    <div style="padding:14px 16px;border-right:1px solid var(--bd);">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--ink3);margin-bottom:4px;">${lbl}</div>
+      <div class="tk-num ${cls}" style="font-size:20px;">${val}</div>
+      <div style="font-size:10px;color:var(--ink3);margin-top:2px;">${sub} · Tài sản ròng: <span class="${rong>=0?'tk-pos':'tk-neg'}">${rong>=0?'+':''}${fmt(rong)}</span></div>
+    </div>`).join('');
+
+  // Xu hướng theo tháng: dùng date của giao dịch nợ/cho vay được tạo
+  // Vì nợ/TS không có history thay đổi → dùng dữ liệu hiện tại lặp lại (cho thấy snapshot)
+  // Nếu có date trên record thì nhóm theo tháng tạo
+  const months=[], tsD=[], vtD=[], noD=[];
+  for(let i=range-1;i>=0;i--){
+    const d=new Date(); d.setMonth(d.getMonth()-i);
+    const m=d.toISOString().slice(0,7);
+    months.push(`${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}`);
+    // Tài sản: tổng tài sản được thêm từ đầu đến hết tháng m
+    const cutoff=m+'-31';
+    const tsM = D.ts.filter(x=>!x.date||x.date<=cutoff).reduce((a,x)=>a+x.val,0);
+    const vtM = D.vaytoi.filter(x=>!x.done&&(!x.date||x.date<=cutoff)).reduce((a,x)=>a+x.con,0);
+    const noM = D.no.filter(x=>!x.done&&(!x.date||x.date<=cutoff)).reduce((a,x)=>a+x.con,0);
+    tsD.push(Math.round(tsM/1e6*10)/10);
+    vtD.push(Math.round(vtM/1e6*10)/10);
+    noD.push(Math.round(noM/1e6*10)/10);
+  }
+
+  mkChart('chart-nts-trend','bar',{labels:months,datasets:[
+    {label:'Tài sản (tr.đ)', data:tsD, backgroundColor:'rgba(45,106,79,.7)',  borderRadius:4},
+    {label:'Cho vay (tr.đ)', data:vtD, backgroundColor:'rgba(138,98,0,.6)',   borderRadius:4},
+    {label:'Nợ (tr.đ)',      data:noD, backgroundColor:'rgba(139,30,45,.55)', borderRadius:4}
+  ]},{scales:{x:{ticks:{font:{size:10}}},y:{beginAtZero:true}}});
 }
 
 // ═══ CAT DROPDOWN ═══
