@@ -1403,6 +1403,17 @@ function addDebt(type){
     done:false
   };
   D[type].unshift(entry);
+  // Clear toàn bộ fields
+  const prefix=isNo?'no':'vt';
+  ['chu','goc','con','ngay','han','note'].forEach(f=>{
+    const el=document.getElementById(prefix+(f==='chu'?(isNo?'-chu':'')+'':(f==='note'?'-note':'-'+f)));
+    if(el) el.value='';
+  });
+  // Reset các field cụ thể
+  [isNo?'no-chu':'vt-ten',isNo?'no-goc':'vt-goc',isNo?'no-con':'vt-con',
+   isNo?'no-ngay':'vt-ngay',isNo?'no-han':'vt-han',isNo?'no-note':'vt-note',
+   ...(isNo?['no-ls']:[])]
+  .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   save();toggleForm('f-'+(isNo?'no':'vt'));renderAll();toast('Đã lưu ✓');
 }
 
@@ -1881,18 +1892,18 @@ function renderTC(){
     <div class="sc"><div class="sc-lbl">Tỷ Lệ Tiết Kiệm</div><div class="sc-val sc-rate">${savingsRate}%</div><div class="sc-sub">của tổng thu</div></div>
     <div class="sc"><div class="sc-lbl">% Tiền Xanh</div><div class="sc-val cv">${xPct}%</div><div class="sc-sub">trong tổng thu</div></div>`;
 
-  const renderRows=(rows,tbody,type)=>{
+  // ── Thu: flat list (giữ nguyên) ──
+  const renderThuRows=(rows,tbody,type)=>{
     const el=document.getElementById(tbody);if(!el)return;
     if(!rows.length){el.innerHTML=`<tr><td colspan="6"><div class="empty">Chưa có dữ liệu tháng này</div></td></tr>`;return;}
     el.innerHTML=rows.map(r=>{
-      const cls=type==='thu'?'ain':'aout';
-      const sign=type==='thu'?'+':'-';
+      const cls='ain';
       return`<tr>
         <td class="col-dot">${nlDot(r.nl)}</td>
         <td><div style="font-size:12px;font-weight:500">${r.desc}</div></td>
         <td>${catChip(r.cat)}</td>
         <td style="color:var(--ink3);font-size:11px">${r.date}</td>
-        <td class="amt ${cls}">${sign}${fmt(r.amt)}</td>
+        <td class="amt ${cls}">+${fmt(r.amt)}</td>
         <td><button class="exp-btn" onclick="expToggle(this,'exp-${type}-${r.id}')">▾</button></td>
       </tr>
       <tr id="exp-${type}-${r.id}"><td colspan="6" style="padding:0">
@@ -1904,8 +1915,79 @@ function renderTC(){
       </td></tr>`;
     }).join('');
   };
-  renderRows(thu,'body-thu','thu');
-  renderRows(chi,'body-chi','chi');
+
+  // ── Chi: group theo ngày ──
+  const renderChiRows=(rows,tbody,type)=>{
+    const el=document.getElementById(tbody);if(!el)return;
+    if(!rows.length){el.innerHTML=`<tr><td colspan="6"><div class="empty">Chưa có dữ liệu tháng này</div></td></tr>`;return;}
+
+    // Group by date, sort mới nhất trên
+    const groups={};
+    rows.forEach(r=>{
+      const d=r.date||'';
+      if(!groups[d]) groups[d]=[];
+      groups[d].push(r);
+    });
+    const sortedDates=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+
+    let html='';
+    sortedDates.forEach(date=>{
+      const dayRows=groups[date];
+      const dayTotal=dayRows.reduce((a,r)=>a+r.amt,0);
+      const dayX=dayRows.filter(r=>r.nl==='xanh').reduce((a,r)=>a+r.amt,0);
+      const dayD=dayRows.filter(r=>r.nl==='do').reduce((a,r)=>a+r.amt,0);
+      const dayNL=dayX-dayD;
+      const nlColor=dayNL>0?'var(--x)':dayNL<0?'var(--r)':'var(--ink3)';
+      const nlSign=dayNL>0?'+':'';
+
+      // Định dạng ngày đẹp
+      const [y,m,d2]=date.split('-');
+      const dateLabel=`${parseInt(d2)}/${parseInt(m)}`;
+      const dow=['CN','T2','T3','T4','T5','T6','T7'][new Date(date).getDay()];
+
+      // Header ngày
+      html+=`<tr style="background:var(--bg);border-top:2px solid var(--bd);">
+        <td class="col-dot"></td>
+        <td colspan="2" style="padding:7px 12px;">
+          <span style="font-size:12px;font-weight:600;color:var(--ink);">${dow}, ${dateLabel}</span>
+          <span style="font-size:10px;color:var(--ink3);margin-left:6px;">${dayRows.length} khoản</span>
+        </td>
+        <td style="text-align:right;padding:7px 8px;">
+          <span style="font-size:11px;color:var(--ink3);">NL ròng: </span>
+          <span style="font-size:12px;font-weight:600;color:${nlColor};">${nlSign}${fmt(Math.abs(dayNL))}</span>
+        </td>
+        <td class="amt aout" style="font-size:13px;font-weight:600;">−${fmt(dayTotal)}</td>
+        <td></td>
+      </tr>`;
+
+      // Các giao dịch trong ngày
+      dayRows.forEach(r=>{
+        const nlColors={'xanh':'#2d6a4f','vang':'#8a6200','do':'#8b1e2d'};
+        const nlBg={'xanh':'var(--xbg)','vang':'var(--vbg)','do':'var(--rbg)'};
+        html+=`<tr style="border-left:3px solid ${nlColors[r.nl]||'#ccc'};">
+          <td class="col-dot" style="padding-left:4px;">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:${nlBg[r.nl]||'var(--bg)'};font-size:11px;">${r.nl==='xanh'?'💚':r.nl==='do'?'❤️':'💛'}</span>
+          </td>
+          <td><div style="font-size:12px;font-weight:500">${r.desc}</div></td>
+          <td>${catChip(r.cat)}</td>
+          <td style="color:var(--ink3);font-size:11px;"></td>
+          <td class="amt aout">−${fmt(r.amt)}</td>
+          <td><button class="exp-btn" onclick="expToggle(this,'exp-${type}-${r.id}')">▾</button></td>
+        </tr>
+        <tr id="exp-${type}-${r.id}"><td colspan="6" style="padding:0">
+          <div class="exp-inner"><b>Số tiền:</b> ${fmtF(r.amt)}<br>
+          <b>Danh mục:</b> ${r.cat||'–'} · <b>NN:</b> ${NN_F[r.nn]||'Chung'} · <b>NL:</b> ${nlBadge(r.nl)}<br>
+          ${r.note?`<b>Ghi chú NL:</b> ${r.note}<br>`:''}
+          ${r.nl==='do'?`<button class="btn-chuyen-hoa${r.chuyenHoa?' done':''}" onclick="chuyenHoaNL('${type}',${r.id})">${r.chuyenHoa?'✓ Đã chuyển hóa':'🌿 Đánh dấu đã chuyển hóa'}</button><br>`:''}
+          <button class="btn btn-del" style="margin-top:5px" onclick="delItem('${type}',${r.id})">Xóa</button></div>
+        </td></tr>`;
+      });
+    });
+    el.innerHTML=html;
+  };
+
+  renderThuRows(thu,'body-thu','thu');
+  renderChiRows(chi,'body-chi','chi');
 
   // Recurring due this month
   const dueList=document.getElementById('rec-due-list');
@@ -2123,7 +2205,38 @@ function addPayment(type, debtId){
   const paid = item.payments.reduce((a,p)=>a+p.amt,0);
   item.con = Math.max(0, item.goc - paid);
   if(item.con===0) item.done=true;
-  save(); renderNTS(); toast('Đã ghi nhận ✓');
+  save(); renderNTS(); toast('Đã ghi nhận thanh toán ✓');
+}
+
+function payAll(type, debtId){
+  const item = D[type].find(d=>d.id===debtId);
+  if(!item) return;
+  if(!confirm(`Xác nhận trả/thu hết ${fmt(item.con)} còn lại?`)) return;
+  if(!item.payments) item.payments=[];
+  item.payments.push({amt:item.con, date:today(), note:'Tất toán'});
+  item.con=0; item.done=true;
+  save(); renderNTS(); toast('Đã tất toán ✓');
+}
+
+function addDebtForPerson(type, name){
+  // Mở form tương ứng và điền sẵn tên
+  const isNo = type==='no';
+  const formId = 'f-'+(isNo?'no':'vt');
+  const nameId = isNo?'no-chu':'vt-ten';
+  // Mở form nếu chưa mở
+  const form = document.getElementById(formId);
+  if(form && !form.classList.contains('open')){
+    toggleForm(formId);
+  }
+  // Điền tên
+  const nameEl = document.getElementById(nameId);
+  if(nameEl){
+    nameEl.value = name;
+    nameEl.focus();
+    // Scroll đến form
+    form?.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+  toast('Điền thêm thông tin khoản mới cho '+name);
 }
 function delPayment(type, debtId, idx){
   const item = D[type].find(d=>d.id===debtId);
@@ -2239,7 +2352,10 @@ function renderNTS(){
           ${items.length>1?`<span style="font-size:10px;color:var(--ink3);margin-left:4px">(${items.length} khoản)</span>`:''}
         </td>
         <td class="amt ${allDone?'':''}${type==='no'?'aout':'ain'}">${fmt(totalCon)}</td>
-        <td colspan="2" style="font-size:11px;color:var(--ink3);">${anyLate?'<span style="color:var(--r)">Có khoản quá hạn</span>':allDone?'<span style="color:var(--x)">Đã tất toán</span>':statusChip('','')}</td>
+        <td colspan="2" style="font-size:11px;color:var(--ink3);">
+          ${anyLate?'<span style="color:var(--r)">Có khoản quá hạn</span>':allDone?'<span style="color:var(--x)">✓ Đã tất toán</span>':statusChip('','')}
+          <button onclick="addDebtForPerson('${type}','${g.name.replace(/'/g,"\\'")}')" style="margin-left:6px;background:none;border:1px solid var(--bd);border-radius:5px;padding:1px 8px;cursor:pointer;font-size:10px;color:var(--ink2);">+ Khoản mới</button>
+        </td>
         <td><button class="exp-btn" onclick="this.classList.toggle('open');document.getElementById('${grpId}').classList.toggle('show')">▾</button></td>`;
       el.appendChild(htr);
       // Group detail rows (collapsed)
@@ -2286,14 +2402,18 @@ function renderNTS(){
             </div>`).join('')}
             <div style="font-size:11px;color:var(--ink2);margin-top:3px;">Đã thanh toán: <b style="color:var(--x)">${fmtF(paidTotal)}</b></div>
           </div>`:''}
-          ${!r.done?`<div style="margin-top:6px;background:var(--bg);padding:7px;border-radius:7px;display:flex;gap:5px;align-items:flex-end;flex-wrap:wrap;">
-            <div><label style="font-size:10px;">Ngày</label><input type="date" id="pay-date-${r.id}" value="${today()}" style="width:120px;font-size:11px;padding:3px 6px;"></div>
-            <div><label style="font-size:10px;">Số tiền</label><input type="number" id="pay-amt-${r.id}" placeholder="0" style="width:100px;font-size:11px;padding:3px 6px;"></div>
-            <div style="flex:1;min-width:100px"><label style="font-size:10px;">Ghi chú</label><input type="text" id="pay-note-${r.id}" placeholder="..." style="font-size:11px;padding:3px 6px;"></div>
-            <button class="btn btn-o" style="font-size:11px;padding:3px 9px;" onclick="addPayment('${type}',${r.id})">+ Ghi</button>
+          ${!r.done?`<div style="margin-top:6px;background:var(--bg);padding:7px;border-radius:7px;">
+            <div style="font-size:11px;font-weight:600;color:var(--ink2);margin-bottom:5px;">💸 ${type==='no'?'Ghi nhận trả nợ':'Ghi nhận thu hồi'}</div>
+            <div style="display:flex;gap:5px;align-items:flex-end;flex-wrap:wrap;">
+              <div><label style="font-size:10px;">Ngày</label><input type="date" id="pay-date-${r.id}" value="${today()}" style="width:120px;font-size:11px;padding:3px 6px;"></div>
+              <div><label style="font-size:10px;">Số tiền trả (đ)</label><input type="number" id="pay-amt-${r.id}" placeholder="0" style="width:120px;font-size:11px;padding:3px 6px;"></div>
+              <div style="flex:1;min-width:100px"><label style="font-size:10px;">Ghi chú</label><input type="text" id="pay-note-${r.id}" placeholder="..." style="font-size:11px;padding:3px 6px;"></div>
+              <button class="btn btn-x" style="font-size:11px;padding:4px 12px;" onclick="addPayment('${type}',${r.id})">✓ Xác nhận thanh toán</button>
+              <button class="btn btn-o" style="font-size:11px;padding:4px 10px;" onclick="payAll('${type}',${r.id})">Trả hết</button>
+            </div>
           </div>`:''}
           <div style="margin-top:5px;display:flex;gap:5px;">
-            ${!r.done?`<button class="btn btn-o" style="font-size:11px;padding:3px 9px;" onclick="markDone('${type}',${r.id})">✓ Tất toán</button>`:''}
+            ${!r.done?`<button class="btn btn-o" style="font-size:11px;padding:3px 9px;" onclick="markDone('${type}',${r.id})">✓ Tất toán</button>`:'<span style="font-size:11px;color:var(--x);">✓ Đã tất toán</span>'}
             <button class="btn btn-del" style="font-size:11px;padding:3px 9px;" onclick="delItem('${type}',${r.id})">Xóa</button>
           </div>`;
         inner.appendChild(itemDiv);
