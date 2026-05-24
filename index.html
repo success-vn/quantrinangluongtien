@@ -2993,6 +2993,9 @@ function onTKMonthChange(val){
   renderTK();
 }
 
+// Helper NL sum - dùng chung cho nhiều hàm
+function nlSum(arr, color){ return arr.filter(x=>x.nl===color).reduce((a,x)=>a+x.amt,0); }
+
 function renderTK(){
   const picker = document.getElementById('tk-month-picker');
   if(picker && !picker.value) picker.value = tkMonth;
@@ -3006,7 +3009,7 @@ function renderTK(){
   if(lblEl) lblEl.textContent = tkLbl;
 
   // ── Helpers NL ──
-  const nlSum = (arr, color) => arr.filter(x=>x.nl===color).reduce((a,x)=>a+x.amt, 0);
+  // nlSum defined globally above
 
   // ── BLOCK 1: Kế toán 2 cột ──
   const thuT = thuM.reduce((a,x)=>a+x.amt,0);
