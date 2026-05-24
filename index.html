@@ -276,15 +276,42 @@ textarea{resize:none;min-height:52px;}
 .sync-dot.err{background:#8b1e2d;}
 @keyframes pulse{from{opacity:.4}to{opacity:1;}}
 
-/* ── LOGIN SCREEN ── */
-#login-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;}
-.login-card{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:48px 40px;text-align:center;max-width:360px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,.08);}
-.login-logo{font-family:var(--serif);font-size:36px;font-weight:600;color:var(--x);margin-bottom:6px;}
-.login-sub{font-size:13px;color:var(--ink3);margin-bottom:32px;line-height:1.6;}
-.btn-google{display:inline-flex;align-items:center;gap:10px;padding:12px 24px;border:1px solid var(--bd);border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink);font-family:var(--sans);transition:all .15s;width:100%;justify-content:center;}
-.btn-google:hover{border-color:var(--xbd);background:var(--xbg);color:var(--x);}
-.btn-google img{width:20px;height:20px;}
-.login-note{font-size:11px;color:var(--ink4);margin-top:16px;}
+/* ── AUTH SCREENS ── */
+.auth-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;}
+.auth-card{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:36px 32px;max-width:380px;width:92%;box-shadow:0 12px 40px rgba(0,0,0,.08);}
+.auth-logo{font-family:var(--serif);font-size:28px;font-weight:600;color:var(--x);margin-bottom:4px;text-align:center;}
+.auth-sub{font-size:12px;color:var(--ink3);text-align:center;margin-bottom:24px;line-height:1.6;}
+.auth-tabs{display:flex;border:1px solid var(--bd);border-radius:10px;overflow:hidden;margin-bottom:20px;}
+.auth-tab{flex:1;padding:8px;font-size:12px;font-weight:500;cursor:pointer;background:none;border:none;font-family:var(--sans);color:var(--ink3);transition:all .15s;}
+.auth-tab.on{background:var(--x);color:#fff;}
+.auth-field{margin-bottom:12px;}
+.auth-field label{display:block;font-size:11px;font-weight:600;color:var(--ink2);margin-bottom:4px;}
+.auth-field input{width:100%;padding:9px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--bg);color:var(--ink);outline:none;box-sizing:border-box;transition:border .15s;}
+.auth-field input:focus{border-color:var(--xbd);}
+.auth-btn{width:100%;padding:11px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);transition:all .15s;margin-top:4px;}
+.auth-btn-main{background:var(--x);color:#fff;}.auth-btn-main:hover{background:var(--xdk);}
+.auth-btn-google{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;border:1px solid var(--bd)!important;color:var(--ink);margin-top:10px;}
+.auth-btn-google:hover{border-color:var(--xbd)!important;background:var(--xbg);}
+.auth-divider{display:flex;align-items:center;gap:8px;margin:14px 0;font-size:11px;color:var(--ink3);}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;border-top:1px solid var(--bd);}
+.auth-err{background:#fdf0f1;border:1px solid var(--rbd);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--r);margin-bottom:10px;display:none;}
+.auth-note{font-size:11px;color:var(--ink3);text-align:center;margin-top:14px;line-height:1.6;}
+/* Pending screen */
+.pending-card{text-align:center;}
+.pending-icon{font-size:48px;margin-bottom:12px;}
+.pending-title{font-size:18px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+.pending-msg{font-size:13px;color:var(--ink3);line-height:1.6;margin-bottom:20px;}
+/* Admin panel */
+.admin-badge{background:#7c3aed;color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:4px;vertical-align:middle;}
+.user-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--bd);}
+.user-row:last-child{border-bottom:none;}
+.user-info{flex:1;}
+.user-email{font-size:13px;font-weight:500;color:var(--ink);}
+.user-meta{font-size:11px;color:var(--ink3);margin-top:1px;}
+.user-status{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;}
+.status-pending{background:#fff3cd;color:#856404;}
+.status-approved{background:var(--xbg);color:var(--x);}
+.status-rejected{background:var(--rbg);color:var(--r);}
 
 /* ── USER AVATAR ── */
 .user-pill{display:flex;align-items:center;gap:6px;cursor:pointer;padding:3px 8px;border-radius:20px;border:1px solid var(--bd);background:var(--card);transition:all .12s;}
@@ -371,16 +398,58 @@ textarea{resize:none;min-height:52px;}
 <body>
 
 <!-- HEADER -->
-<!-- ═══ LOGIN SCREEN ═══ -->
-<div id="login-screen">
-  <div class="login-card">
-    <div class="login-logo">💚 Dòng Tiền Xanh</div>
-    <div class="login-sub">Quản trị năng lượng tài chính<br>cá nhân & tâm thức về tiền</div>
-    <button class="btn-google" onclick="signInGoogle()">
-      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-      Đăng nhập bằng Google
-    </button>
-    <div class="login-note">Dữ liệu được mã hóa và chỉ bạn mới xem được</div>
+<!-- ═══ AUTH SCREEN ═══ -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card" id="auth-main-card">
+    <div class="auth-logo">💚 Dòng Tiền Xanh</div>
+    <div class="auth-sub">Quản trị năng lượng tài chính</div>
+
+    <!-- Tabs đăng nhập / đăng ký -->
+    <div class="auth-tabs">
+      <button class="auth-tab on" onclick="authSwitchTab('login',this)">Đăng nhập</button>
+      <button class="auth-tab" onclick="authSwitchTab('register',this)">Đăng ký</button>
+    </div>
+
+    <div id="auth-err" class="auth-err"></div>
+
+    <!-- Form đăng nhập -->
+    <div id="auth-login-form">
+      <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="email@gmail.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="auth-field"><label>Mật khẩu</label><input type="password" id="login-pw" placeholder="Mật khẩu" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="auth-btn auth-btn-main" onclick="doLogin()">Đăng nhập</button>
+      <div class="auth-divider">hoặc</div>
+      <button class="auth-btn auth-btn-google" onclick="signInGoogle()">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="">
+        Đăng nhập bằng Google
+      </button>
+    </div>
+
+    <!-- Form đăng ký -->
+    <div id="auth-register-form" style="display:none;">
+      <div class="auth-field"><label>Họ tên</label><input type="text" id="reg-name" placeholder="Nguyễn Văn A"></div>
+      <div class="auth-field"><label>Email</label><input type="email" id="reg-email" placeholder="email@gmail.com"></div>
+      <div class="auth-field"><label>Mật khẩu</label><input type="password" id="reg-pw" placeholder="Tối thiểu 6 ký tự"></div>
+      <div class="auth-field"><label>Xác nhận mật khẩu</label><input type="password" id="reg-pw2" placeholder="Nhập lại mật khẩu" onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <button class="auth-btn auth-btn-main" onclick="doRegister()">Đăng ký tài khoản</button>
+      <div class="auth-note">Sau khi đăng ký, admin sẽ duyệt tài khoản của bạn trước khi sử dụng được.</div>
+    </div>
+  </div>
+
+  <!-- Màn hình chờ duyệt -->
+  <div class="auth-card pending-card" id="auth-pending-card" style="display:none;">
+    <div class="pending-icon">⏳</div>
+    <div class="pending-title">Tài khoản đang chờ duyệt</div>
+    <div class="pending-msg">Tài khoản của bạn đã được tạo thành công.<br>Admin sẽ xét duyệt sớm nhất có thể.<br>Vui lòng quay lại sau.</div>
+    <div id="pending-email" style="font-size:12px;color:var(--ink3);margin-bottom:16px;"></div>
+    <button class="auth-btn auth-btn-main" onclick="auth.signOut()" style="background:var(--r);">Đăng xuất</button>
+  </div>
+
+  <!-- Màn hình bị từ chối -->
+  <div class="auth-card pending-card" id="auth-rejected-card" style="display:none;">
+    <div class="pending-icon">🚫</div>
+    <div class="pending-title">Tài khoản bị từ chối</div>
+    <div class="pending-msg">Tài khoản của bạn không được phê duyệt.<br>Vui lòng liên hệ admin để biết thêm.</div>
+    <button class="auth-btn auth-btn-main" onclick="auth.signOut()" style="background:var(--r);margin-top:8px;">Đăng xuất</button>
   </div>
 </div>
 
@@ -393,6 +462,7 @@ textarea{resize:none;min-height:52px;}
     <button class="tab" onclick="goTab('tiet-kiem',this)">Quỹ Bảo An</button>
     <button class="tab" onclick="goTab('no-tai-san',this)">Nợ & Tài Sản</button>
     <button class="tab" onclick="goTab('thong-ke',this)">Thống Kê</button>
+    <button class="tab" id="admin-tab" onclick="goTab('admin',this)" style="display:none;">👑 Admin</button>
   </nav>
   <div class="hdr-right">
     <div class="mon-nav">
@@ -412,14 +482,13 @@ textarea{resize:none;min-height:52px;}
       <button class="mon-btn" onclick="chgMonth(1)">›</button>
     </div>
     <div class="bal-pill" onclick="openModal('m-acc')">💳 <span id="hdr-bal">0đ</span></div>
-    <div class="sync-badge" id="sync-badge"><span class="sync-dot" id="sync-dot"></span><span id="sync-lbl">...</span></div>
-    <div class="user-pill" id="user-pill" onclick="confirmSignOut()" title="Đăng xuất">
-      <img class="user-av" id="user-av" src="" alt="">
-      <span class="user-name" id="user-name"></span>
+    <div class="sync-badge" id="sync-badge" style="padding:2px 6px;"><span class="sync-dot" id="sync-dot"></span><span id="sync-lbl" style="font-size:9px;"></span></div>
+    <div class="user-pill" id="user-pill" onclick="confirmSignOut()" title="Đăng xuất" style="padding:2px 4px;">
+      <img class="user-av" id="user-av" src="" alt="" style="width:24px;height:24px;">
     </div>
-    <div class="hdr-io">
-      <button class="btn-io" onclick="exportData()" title="Xuất dữ liệu JSON">⬇ Xuất</button>
-      <button class="btn-io" onclick="document.getElementById('import-file').click()" title="Nhập dữ liệu JSON">⬆ Nhập</button>
+    <div class="hdr-io" style="gap:2px;">
+      <button class="btn-io" onclick="exportData()" title="Xuất dữ liệu JSON" style="padding:2px 7px;font-size:11px;">⬇</button>
+      <button class="btn-io" onclick="document.getElementById('import-file').click()" title="Nhập dữ liệu JSON" style="padding:2px 7px;font-size:11px;">⬆</button>
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
     </div>
   </div>
@@ -1010,6 +1079,35 @@ textarea{resize:none;min-height:52px;}
   </div>
 </div>
 
+<!-- ═══ ADMIN TAB ═══ -->
+<div id="tab-admin" class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+    <div style="font-size:14px;font-weight:600;">👑 Quản Lý Tài Khoản <span class="admin-badge">ADMIN</span></div>
+    <button class="btn btn-o" onclick="renderAdmin()">🔄 Làm mới</button>
+  </div>
+
+  <!-- Tài khoản chờ duyệt -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hdr">
+      <span class="card-title">⏳ Chờ Duyệt</span>
+      <span id="pending-count" style="font-size:11px;color:var(--r);font-weight:600;"></span>
+    </div>
+    <div id="admin-pending-list"><div class="empty">Không có tài khoản chờ duyệt</div></div>
+  </div>
+
+  <!-- Tài khoản đã duyệt -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hdr"><span class="card-title">✅ Đã Duyệt</span></div>
+    <div id="admin-approved-list"><div class="empty">Chưa có tài khoản nào</div></div>
+  </div>
+
+  <!-- Tài khoản bị từ chối -->
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">🚫 Đã Từ Chối</span></div>
+    <div id="admin-rejected-list"><div class="empty">Chưa có</div></div>
+  </div>
+</div>
+
 <!-- ═══ MODALS ═══ -->
 
 <!-- Tài khoản -->
@@ -1182,31 +1280,115 @@ function syncStatus(state, msg){
 function setUserUI(user){
   const pill = document.getElementById('user-pill');
   const av = document.getElementById('user-av');
-  const nm = document.getElementById('user-name');
   if(!pill) return;
   if(user){
-    av.src = user.photoURL || '';
-    nm.textContent = user.displayName ? user.displayName.split(' ').pop() : 'Bạn';
+    if(av) av.src = user.photoURL || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="%232d6a4f"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill="%232d6a4f"/></svg>';
     pill.style.display = 'flex';
+    pill.title = (user.displayName||user.email||'') + '\nClick để đăng xuất';
   } else {
     pill.style.display = 'none';
   }
 }
 
+// ═══ AUTH UI HELPERS ═══
+function authSwitchTab(tab, el){
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('auth-login-form').style.display = tab==='login'?'':'none';
+  document.getElementById('auth-register-form').style.display = tab==='register'?'':'none';
+  document.getElementById('auth-err').style.display='none';
+}
+
+function authShowErr(msg){
+  const el=document.getElementById('auth-err');
+  if(el){ el.textContent=msg; el.style.display='block'; }
+}
+
+function showAuthScreen(mode){
+  const screen=document.getElementById('auth-screen');
+  const main=document.getElementById('auth-main-card');
+  const pending=document.getElementById('auth-pending-card');
+  const rejected=document.getElementById('auth-rejected-card');
+  if(screen) screen.style.display='flex';
+  if(main) main.style.display=mode==='main'?'':'none';
+  if(pending) pending.style.display=mode==='pending'?'':'none';
+  if(rejected) rejected.style.display=mode==='rejected'?'':'none';
+}
+
+function hideAuthScreen(){
+  const screen=document.getElementById('auth-screen');
+  if(screen) screen.style.display='none';
+}
+
+// ═══ ĐĂNG NHẬP EMAIL ═══
+async function doLogin(){
+  const email=document.getElementById('login-email')?.value.trim();
+  const pw=document.getElementById('login-pw')?.value;
+  if(!email||!pw){ authShowErr('Vui lòng nhập email và mật khẩu'); return; }
+  try{
+    await auth.signInWithEmailAndPassword(email, pw);
+  } catch(e){
+    const msgs={'auth/user-not-found':'Email chưa đăng ký','auth/wrong-password':'Sai mật khẩu','auth/invalid-email':'Email không hợp lệ','auth/too-many-requests':'Quá nhiều lần thử, vui lòng đợi'};
+    authShowErr(msgs[e.code]||'Đăng nhập thất bại: '+e.message);
+  }
+}
+
+// ═══ ĐĂNG KÝ ═══
+async function doRegister(){
+  const name=document.getElementById('reg-name')?.value.trim();
+  const email=document.getElementById('reg-email')?.value.trim();
+  const pw=document.getElementById('reg-pw')?.value;
+  const pw2=document.getElementById('reg-pw2')?.value;
+  if(!name){ authShowErr('Vui lòng nhập họ tên'); return; }
+  if(!email){ authShowErr('Vui lòng nhập email'); return; }
+  if(pw.length<6){ authShowErr('Mật khẩu tối thiểu 6 ký tự'); return; }
+  if(pw!==pw2){ authShowErr('Mật khẩu xác nhận không khớp'); return; }
+  try{
+    const cred=await auth.createUserWithEmailAndPassword(email, pw);
+    await cred.user.updateProfile({displayName: name});
+    // Lưu user profile vào Firebase, trạng thái chờ duyệt
+    await db.ref('/users/'+cred.user.uid).set({
+      uid: cred.user.uid,
+      name, email,
+      approved: false,
+      rejected: false,
+      role: 'user',
+      createdAt: new Date().toISOString()
+    });
+    toast('Đăng ký thành công! Chờ admin duyệt.');
+  } catch(e){
+    const msgs={'auth/email-already-in-use':'Email đã được đăng ký','auth/invalid-email':'Email không hợp lệ','auth/weak-password':'Mật khẩu quá yếu'};
+    authShowErr(msgs[e.code]||'Đăng ký thất bại: '+e.message);
+  }
+}
+
 function signInGoogle(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(e=>{
-    alert('Đăng nhập thất bại: ' + e.message);
-  });
+  auth.signInWithPopup(provider).then(async cred=>{
+    const snap=await db.ref('/users/'+cred.user.uid).once('value');
+    if(!snap.val()){
+      // User Google mới → tạo record, chờ admin duyệt
+      await db.ref('/users/'+cred.user.uid).set({
+        uid: cred.user.uid,
+        name: cred.user.displayName||'',
+        email: cred.user.email,
+        approved: false,
+        rejected: false,
+        role: 'user',
+        provider: 'google',
+        createdAt: new Date().toISOString()
+      });
+    }
+  }).catch(e=>{ authShowErr('Đăng nhập Google thất bại: '+e.message); });
 }
 
 function confirmSignOut(){
-  if(!confirm('Đăng xuất khỏi Dòng Tiền Xanh?')) return;
+  if(!confirm('Đăng xuất?')) return;
   auth.signOut();
 }
 
+// ═══ FIREBASE INIT ═══
 function startDataListener(uid){
-  // Hủy listener cũ nếu có
   if(_fbListener){ db.ref('/taichinh/'+uid+'/data').off('value', _fbListener); }
   syncStatus('syncing','Đang tải…');
   _fbListener = db.ref('/taichinh/'+uid+'/data').on('value', snap => {
@@ -1231,36 +1413,157 @@ function initFirebase(){
     db = firebase.database();
     auth = firebase.auth();
 
-    auth.onAuthStateChanged(user => {
-      const loginScreen = document.getElementById('login-screen');
-      if(user){
-        currentUid = user.uid;
-        // Ẩn login screen
-        if(loginScreen) loginScreen.style.display = 'none';
-        setUserUI(user);
-        // Load local cache trước
-        try{
-          const cached = localStorage.getItem('dtx3_'+currentUid);
-          if(cached){ D={...D,...JSON.parse(cached)}; guardArrays(); renderAll(); }
-        }catch(e){}
-        // Sau đó sync Firebase
-        startDataListener(currentUid);
-        // Sync KCNL
-        db.ref('/kcnl/'+currentUid+'/weeks').once('value').then(snap=>{
-          const remote=snap.val();
-          if(remote){ kcnlWeeks={...kcnlWeeks,...remote}; renderKCNL(); }
-        });
-      } else {
+    auth.onAuthStateChanged(async user => {
+      if(!user){
         currentUid = null;
         setUserUI(null);
-        if(loginScreen) loginScreen.style.display = 'flex';
+        showAuthScreen('main');
         syncStatus('','');
+        return;
       }
+
+      currentUid = user.uid;
+
+      // Kiểm tra user record trong Firebase
+      const snap = await db.ref('/users/'+user.uid).once('value');
+      let userData = snap.val();
+
+      // Nếu chưa có record
+      if(!userData){
+        userData = {
+          uid: user.uid,
+          name: user.displayName||'',
+          email: user.email,
+          approved: false,
+          rejected: false,
+          role: 'user',
+          createdAt: new Date().toISOString()
+        };
+        await db.ref('/users/'+user.uid).set(userData);
+      }
+
+      // Kiểm tra trạng thái
+      if(userData.rejected){
+        showAuthScreen('rejected');
+        return;
+      }
+      if(!userData.approved){
+        const pendingEmail=document.getElementById('pending-email');
+        if(pendingEmail) pendingEmail.textContent=user.email;
+        showAuthScreen('pending');
+        return;
+      }
+
+      // Đã được duyệt → vào app
+      hideAuthScreen();
+      setUserUI(user);
+
+      // Hiện tab admin nếu là admin
+      const adminTab=document.getElementById('admin-tab');
+      if(adminTab) adminTab.style.display=userData.role==='admin'?'':'none';
+
+      // Load data
+      try{
+        const cached = localStorage.getItem('dtx3_'+currentUid);
+        if(cached){ D={...D,...JSON.parse(cached)}; guardArrays(); renderAll(); }
+      }catch(e){}
+      startDataListener(currentUid);
+      db.ref('/kcnl/'+currentUid+'/weeks').once('value').then(snap2=>{
+        const remote=snap2.val();
+        if(remote){ kcnlWeeks={...kcnlWeeks,...remote}; renderKCNL(); }
+      });
     });
   } catch(e){
     syncStatus('err','Offline');
     console.error('Firebase init error:', e);
   }
+}
+
+// ═══ ADMIN: DUYỆT TÀI KHOẢN ═══
+function renderAdmin(){
+  db.ref('/users').once('value').then(snap=>{
+    const users=snap.val()||{};
+    const list=Object.values(users);
+    const pending=list.filter(u=>!u.approved&&!u.rejected);
+    const approved=list.filter(u=>u.approved);
+    const rejected=list.filter(u=>u.rejected);
+
+    const pCount=document.getElementById('pending-count');
+    if(pCount) pCount.textContent=pending.length?`${pending.length} tài khoản chờ`:'';
+
+    const renderList=(el,items,actions)=>{
+      if(!el) return;
+      if(!items.length){ el.innerHTML='<div class="empty">Không có</div>'; return; }
+      el.innerHTML=items.map(u=>`
+        <div class="user-row">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--xbg);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">👤</div>
+          <div class="user-info">
+            <div class="user-email">${u.name||'(chưa có tên)'}</div>
+            <div class="user-meta">${u.email} · ${u.createdAt?u.createdAt.slice(0,10):''}</div>
+          </div>
+          <div style="display:flex;gap:5px;">
+            ${actions(u)}
+          </div>
+        </div>`).join('');
+    };
+
+    renderList(
+      document.getElementById('admin-pending-list'), pending,
+      u=>`<button class="btn btn-x" style="font-size:11px;padding:4px 10px;" onclick="adminApprove('${u.uid}')">✓ Duyệt</button>
+          <button class="btn btn-del" style="font-size:11px;padding:4px 10px;" onclick="adminReject('${u.uid}')">✗ Từ chối</button>`
+    );
+    renderList(
+      document.getElementById('admin-approved-list'), approved,
+      u=>u.uid===currentUid
+        ? `<span class="user-status status-approved">Bạn</span>`
+        : u.role==='admin'
+          ? `<span class="user-status" style="background:#ede9fe;color:#6d28d9;">👑 Admin</span>
+             <button class="btn btn-del" style="font-size:11px;padding:3px 8px;" onclick="adminDemote('${u.uid}')">Hạ Admin</button>
+             <button class="btn btn-del" style="font-size:11px;padding:3px 8px;" onclick="adminRevoke('${u.uid}')">Thu hồi</button>`
+          : `<span class="user-status status-approved">✓ Duyệt</span>
+             <button class="btn btn-o" style="font-size:11px;padding:3px 8px;" onclick="adminPromote('${u.uid}')">👑 Thêm Admin</button>
+             <button class="btn btn-del" style="font-size:11px;padding:3px 8px;" onclick="adminRevoke('${u.uid}')">Thu hồi</button>`
+    );
+    renderList(
+      document.getElementById('admin-rejected-list'), rejected,
+      u=>`<span class="user-status status-rejected">Từ chối</span>
+          <button class="btn btn-o" style="font-size:11px;padding:3px 8px;margin-left:4px;" onclick="adminApprove('${u.uid}')">Duyệt lại</button>`
+    );
+  });
+}
+
+async function adminApprove(uid){
+  await db.ref('/users/'+uid).update({approved:true, rejected:false});
+  toast('Đã duyệt tài khoản ✓');
+  renderAdmin();
+}
+
+async function adminReject(uid){
+  if(!confirm('Từ chối tài khoản này?')) return;
+  await db.ref('/users/'+uid).update({approved:false, rejected:true});
+  toast('Đã từ chối ✓');
+  renderAdmin();
+}
+
+async function adminRevoke(uid){
+  if(!confirm('Thu hồi quyền truy cập?')) return;
+  await db.ref('/users/'+uid).update({approved:false, rejected:false});
+  toast('Đã thu hồi ✓');
+  renderAdmin();
+}
+
+async function adminPromote(uid){
+  if(!confirm('Thăng người này lên Admin? Họ sẽ có quyền duyệt tài khoản.')) return;
+  await db.ref('/users/'+uid).update({role:'admin'});
+  toast('Đã thêm Admin ✓');
+  renderAdmin();
+}
+
+async function adminDemote(uid){
+  if(!confirm('Hạ Admin này về người dùng thường?')) return;
+  await db.ref('/users/'+uid).update({role:'user'});
+  toast('Đã hạ quyền ✓');
+  renderAdmin();
 }
 
 function save(){
@@ -3044,6 +3347,7 @@ function renderAll(){
   const id=active.id;
   updateHdrBal();
   if(id==='tab-khoi-cau-nl') renderKCNL();
+  else if(id==='tab-admin') renderAdmin();
   else if(id==='tab-thu-chi')renderTC();
   else if(id==='tab-ngan-sach')renderBudget();
   else if(id==='tab-tiet-kiem')renderTietKiem();
@@ -3081,19 +3385,28 @@ function kcnlSave(){
   }
 }
 
+// Helper: format Date → 'YYYY-MM-DD' theo local time (không dùng toISOString bị UTC)
+function kcnlFmtDate(d){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+
 function kcnlGetMonday(date){
   const d=new Date(date);
-  d.setHours(0,0,0,0);
-  const day=d.getDay(); // 0=CN, 1=T2, ..., 6=T7
-  const diff=day===0?-6:1-day; // CN lùi 6, T2 lùi 0, T3 lùi 1...
+  d.setHours(12,0,0,0); // dùng 12:00 trưa tránh lệch DST
+  const day=d.getDay(); // 0=CN,1=T2,...,6=T7
+  const diff=day===0?-6:1-day;
   d.setDate(d.getDate()+diff);
   return d;
 }
 
-function kcnlWeekKey(monday){ return monday.toISOString().slice(0,10); }
+function kcnlWeekKey(monday){ return kcnlFmtDate(monday); }
 
 function kcnlGoToday(){
-  kcnlCurrentWeekStart = kcnlGetMonday(new Date());
+  const n=new Date();
+  kcnlCurrentWeekStart=kcnlGetMonday(new Date(n.getFullYear(),n.getMonth(),n.getDate(),12,0,0));
   renderKCNL();
 }
 
@@ -3106,8 +3419,24 @@ function kcnlShiftWeek(d){
 
 function kcnlGoDate(val){
   if(!val) return;
-  kcnlCurrentWeekStart=kcnlGetMonday(new Date(val));
+  // Parse val='YYYY-MM-DD' an toàn (không qua new Date(string) bị UTC)
+  const [y,m,dd]=val.split('-').map(Number);
+  const d=new Date(y,m-1,dd,12,0,0);
+  kcnlCurrentWeekStart=kcnlGetMonday(d);
   renderKCNL();
+}
+
+function kcnlBlankWeek(monday){
+  const days=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(monday);
+    d.setDate(d.getDate()+i);
+    days.push({
+      date: kcnlFmtDate(d),
+      cells: KCNL_HOURS.map(h=>({h,act:'',type:''}))
+    });
+  }
+  return {key:kcnlWeekKey(monday),days};
 }
 
 function kcnlNewWeek(){
@@ -3118,23 +3447,6 @@ function kcnlNewWeek(){
   kcnlWeeks[key]=kcnlBlankWeek(kcnlCurrentWeekStart);
   renderKCNL();
   toast('Đã tạo tuần mới ✓');
-}
-
-function kcnlBlankWeek(monday){
-  const days=[];
-  for(let i=0;i<7;i++){
-    const d=new Date(monday);
-    d.setDate(d.getDate()+i);
-    // Format YYYY-MM-DD theo local time, tránh lệch timezone
-    const y=d.getFullYear();
-    const m=String(d.getMonth()+1).padStart(2,'0');
-    const dd=String(d.getDate()).padStart(2,'0');
-    days.push({
-      date:`${y}-${m}-${dd}`,
-      cells:KCNL_HOURS.map(h=>({h,act:'',type:''}))
-    });
-  }
-  return {key:kcnlWeekKey(monday),days};
 }
 
 function kcnlSaveWeek(){
@@ -3196,7 +3508,7 @@ function renderKCNL(){
   const lbl=document.getElementById('kcnl-week-lbl');
   if(lbl) lbl.textContent=`Tuần: ${fmt2(kcnlCurrentWeekStart)} – ${fmt2(endDate)}/${endDate.getFullYear()}`;
   const fromIn=document.getElementById('kcnl-from');
-  if(fromIn) fromIn.value=key;
+  if(fromIn) fromIn.value=kcnlFmtDate(kcnlCurrentWeekStart);
 
   const emptyEl=document.getElementById('kcnl-empty');
   const table=document.getElementById('kcnl-table');
@@ -3378,7 +3690,9 @@ function kcnlDelWeek(key){
 // ═══ INIT KCNL ═══
 load();
 kcnlLoad();
-kcnlCurrentWeekStart = kcnlGetMonday(new Date());
+// Tính thứ 2 của tuần hiện tại theo local time
+const _now=new Date();
+kcnlCurrentWeekStart = kcnlGetMonday(new Date(_now.getFullYear(),_now.getMonth(),_now.getDate(),12,0,0));
 initMonth();
 populateSelects();
 const _tkp=document.getElementById('tk-month-picker');
