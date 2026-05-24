@@ -85,6 +85,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);font-size:14p
 /* ── 2-COL LAYOUT ── */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 @media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+/* Thống kê: 2 cột luôn bằng nhau */
+.tk-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:700px){.tk-2col{grid-template-columns:1fr;}}
 
 /* ── CARD ── */
 .card{background:var(--card);border:1px solid var(--bd);border-radius:var(--rad);}
@@ -983,24 +986,26 @@ textarea{resize:none;min-height:52px;}
       <button class="btn btn-g" onclick="onTKMonthChange('')">Tháng này</button>
   </div>
 
-  <!-- BLOCK 1: Kế toán tháng -->
+  <!-- BLOCK 1+4: Kế toán tháng + Danh mục (cùng theo tháng) -->
   <div class="card" style="margin-bottom:14px;">
-    <div class="card-hdr"><span class="card-title">📒 Kế Toán Tháng</span><span id="tk-month-lbl" style="font-size:11px;color:var(--ink3);"></span></div>
-    <div class="two-col" style="gap:0;border-top:1px solid var(--bd);">
-      <!-- Cột THU -->
+    <div class="card-hdr">
+      <span class="card-title">📒 Kế Toán Tháng</span>
+      <span id="tk-month-lbl" style="font-size:11px;color:var(--ink3);"></span>
+    </div>
+    <!-- 2 cột kế toán cân đối -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--bd);">
       <div style="border-right:2px solid var(--bd2);">
-        <div style="padding:8px 14px;background:var(--xbg);font-size:11px;font-weight:700;color:var(--x);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd);">
-          💚 THU VÀO <span id="tk-thu-total-lbl" style="float:right;font-family:var(--serif);font-size:14px;"></span>
+        <div style="padding:8px 14px;background:var(--xbg);font-size:11px;font-weight:700;color:var(--x);letter-spacing:.5px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;">
+          <span>💚 THU VÀO</span><span id="tk-thu-total-lbl" style="font-family:var(--serif);font-size:14px;"></span>
         </div>
         <table style="width:100%;border-collapse:collapse;font-size:12px;">
           <tbody id="tk-kt-thu"></tbody>
           <tfoot id="tk-kt-thu-foot"></tfoot>
         </table>
       </div>
-      <!-- Cột CHI -->
       <div>
-        <div style="padding:8px 14px;background:var(--bg);font-size:11px;font-weight:700;color:#1a6b5a;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd);">
-          🏷️ CHI RA <span id="tk-chi-total-lbl" style="float:right;font-family:var(--serif);font-size:14px;color:#1a6b5a;"></span>
+        <div style="padding:8px 14px;background:var(--bg);font-size:11px;font-weight:700;color:#1a6b5a;letter-spacing:.5px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;">
+          <span>🏷️ CHI RA</span><span id="tk-chi-total-lbl" style="font-family:var(--serif);font-size:14px;color:#1a6b5a;"></span>
         </div>
         <table style="width:100%;border-collapse:collapse;font-size:12px;">
           <tbody id="tk-kt-chi"></tbody>
@@ -1008,8 +1013,26 @@ textarea{resize:none;min-height:52px;}
         </table>
       </div>
     </div>
-    <!-- Tổng kết chung -->
+    <!-- Tổng kết -->
     <div id="tk-kt-summary" style="padding:10px 16px;border-top:2px solid var(--bd2);background:var(--bg);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"></div>
+  </div>
+
+  <!-- BLOCK 4: Danh mục theo tháng (donut cả 2) -->
+  <div class="tk-2col">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title" id="tk-thu-title">💚 Thu Theo Danh Mục</span></div>
+      <div style="display:grid;grid-template-columns:160px 1fr;align-items:center;">
+        <div style="padding:14px;"><div style="height:160px;position:relative;"><canvas id="chart-thu-cat"></canvas></div></div>
+        <div id="thu-cat-detail" style="padding:10px 14px 10px 0;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title" id="tk-chi-cat-title">🏷️ Chi Theo Danh Mục</span></div>
+      <div style="display:grid;grid-template-columns:160px 1fr;align-items:center;">
+        <div style="padding:14px;"><div style="height:160px;position:relative;"><canvas id="chart-cat"></canvas></div></div>
+        <div id="chi-cat-detail" style="padding:10px 14px 10px 0;"></div>
+      </div>
+    </div>
   </div>
 
   <!-- BLOCK 2: Năng lượng tiền tháng -->
@@ -1054,21 +1077,6 @@ textarea{resize:none;min-height:52px;}
         <div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;" id="tk-chart-nl-title">Năng Lượng Tiền</div>
         <div class="chart-wrap"><canvas id="chart-nl6"></canvas></div>
       </div>
-    </div>
-  </div>
-
-  <!-- BLOCK 4: Danh mục -->
-  <div class="two-col" style="margin-bottom:14px;">
-    <div class="card">
-      <div class="card-hdr"><span class="card-title" id="tk-thu-title">💚 Thu Theo Danh Mục</span></div>
-      <div style="display:grid;grid-template-columns:200px 1fr;gap:0;align-items:center;">
-        <div style="padding:14px;"><div style="height:180px;position:relative;"><canvas id="chart-thu-cat"></canvas></div></div>
-        <div id="thu-cat-detail" style="padding:14px;"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title">🏷️ Chi Theo Danh Mục</span></div>
-      <div style="padding:14px;"><div class="chart-wrap"><canvas id="chart-cat"></canvas></div></div>
     </div>
   </div>
 
@@ -1498,15 +1506,15 @@ function initFirebase(){
     auth = firebase.auth();
 
     // Xử lý kết quả sau khi redirect từ Google về
+    // Phải xử lý TRƯỚC onAuthStateChanged để tránh flash màn hình login
     auth.getRedirectResult().then(async result=>{
       if(result && result.user){
-        const cred=result;
-        const snap=await db.ref('/users/'+cred.user.uid).once('value');
+        const snap=await db.ref('/users/'+result.user.uid).once('value');
         if(!snap.val()){
-          await db.ref('/users/'+cred.user.uid).set({
-            uid: cred.user.uid,
-            name: cred.user.displayName||'',
-            email: cred.user.email,
+          await db.ref('/users/'+result.user.uid).set({
+            uid: result.user.uid,
+            name: result.user.displayName||'',
+            email: result.user.email,
             approved: false,
             rejected: false,
             role: 'user',
@@ -1517,7 +1525,8 @@ function initFirebase(){
       }
     }).catch(e=>console.error('Redirect result error:',e));
 
-    auth.onAuthStateChanged(async user => {      if(!user){
+    auth.onAuthStateChanged(async user => {
+      if(!user){
         currentUid = null;
         setUserUI(null);
         showAuthScreen('main');
@@ -3168,13 +3177,30 @@ function renderTKCharts(){
 
   const cats=[...new Set(_tkChiM.map(x=>x.cat||'Khác'))];
   const catAmts=cats.map(c=>_tkChiM.filter(x=>(x.cat||'Khác')===c).reduce((a,x)=>a+x.amt,0));
-  const catCols=cats.map((_,i)=>`hsl(${[160,45,220,30,270,10,190,90,340,130,60,200][i%12]},38%,45%)`);
+  const catCols=cats.map((_,i)=>`hsl(${[30,200,270,160,340,60,100,220,10,130,190,90][i%12]},45%,45%)`);
+  const chiTitleEl=document.getElementById('tk-chi-cat-title');
+  if(chiTitleEl) chiTitleEl.textContent=`🏷️ Chi Theo Danh Mục – ${_tkLbl}`;
   if(cats.length){
-    mkChart('chart-cat','bar',{labels:cats,datasets:[{label:'Chi',data:catAmts,backgroundColor:catCols,borderRadius:3}]},
-      {indexAxis:'y',scales:{x:{beginAtZero:true},y:{ticks:{autoSkip:false,font:{size:11}}}}});
+    mkChart('chart-cat','doughnut',{
+      labels:cats,
+      datasets:[{data:catAmts,backgroundColor:catCols,borderWidth:2,borderColor:'#fff'}]
+    },{plugins:{legend:{display:false}}});
+    const detail=document.getElementById('chi-cat-detail');
+    if(detail){
+      const total=catAmts.reduce((a,x)=>a+x,0)||1;
+      detail.innerHTML=cats.map((c,i)=>`
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="width:9px;height:9px;border-radius:2px;background:${catCols[i]};flex-shrink:0;"></span>
+          <span style="flex:1;font-size:12px;">${c}</span>
+          <span style="font-size:12px;font-weight:600;color:#1a6b5a;">-${fmt(catAmts[i])}</span>
+          <span style="font-size:11px;color:var(--ink3);min-width:30px;text-align:right;">${Math.round(catAmts[i]/total*100)}%</span>
+        </div>`).join('');
+    }
   } else {
     const c=document.getElementById('chart-cat');if(c&&c._ch){c._ch.destroy();c._ch=null;}
+    const d=document.getElementById('chi-cat-detail');if(d)d.innerHTML='<div style="color:var(--ink3);font-size:12px;padding:8px;">Chưa có dữ liệu</div>';
   }
+
 
   // ── BLOCK 5: Bảng cân đối tài sản ──
   const nlDotS = nl => nl==='xanh'?'💚':nl==='do'?'❤️':'💛';
