@@ -1511,6 +1511,7 @@ function initFirebase(){
         if(cached){ D={...D,...JSON.parse(cached)}; guardArrays(); renderAll(); }
       }catch(e){}
       startDataListener(currentUid);
+      loadCatsFromFirebase();
       db.ref('/kcnl/'+currentUid+'/weeks').once('value').then(snap2=>{
         const remote=snap2.val();
         if(remote){ kcnlWeeks={...kcnlWeeks,...remote}; renderKCNL(); }
@@ -1643,8 +1644,26 @@ function load(){
   }catch(e){ console.error('load error',e); }
 }
 
-function getCats(t){try{const s=localStorage.getItem('dtx-cats-'+t);if(s)return JSON.parse(s);}catch(e){}return[...DEF_CATS[t]];}
-function saveCats(t,a){localStorage.setItem('dtx-cats-'+t,JSON.stringify(a));}
+function getCats(t){try{const s=localStorage.getItem('dtx-cats-'+t+(currentUid?'_'+currentUid:''));if(s)return JSON.parse(s);}catch(e){}return[...DEF_CATS[t]];}
+function saveCats(t,a){
+  const key='dtx-cats-'+t+(currentUid?'_'+currentUid:'');
+  try{localStorage.setItem(key,JSON.stringify(a));}catch(e){}
+  if(currentUid&&db){
+    db.ref('/cats/'+currentUid+'/'+t).set(a).catch(e=>console.error('saveCats error',e));
+  }
+}
+function loadCatsFromFirebase(){
+  if(!currentUid||!db) return;
+  ['thu','chi'].forEach(t=>{
+    db.ref('/cats/'+currentUid+'/'+t).once('value').then(snap=>{
+      const remote=snap.val();
+      if(remote&&Array.isArray(remote)){
+        try{localStorage.setItem('dtx-cats-'+t+'_'+currentUid,JSON.stringify(remote));}catch(e){}
+        populateSelects();
+      }
+    });
+  });
+}
 
 // ═══ CUSTOM MONTH PICKER ═══
 let _mpYear = new Date().getFullYear();
@@ -2170,15 +2189,14 @@ function mkChart(id,type,data,opts){
 let _catEditType='', _catEditName='';
 
 function getCatsSafe(type){
-  // Luôn đảm bảo đã init localStorage từ DEF_CATS
-  const key='dtx-cats-'+type;
+  const key='dtx-cats-'+type+(currentUid?'_'+currentUid:'');
   const s=localStorage.getItem(key);
   if(s){try{return JSON.parse(s);}catch(e){}}
-  // Chưa có → khởi tạo từ default và lưu ngay
   const def=[...DEF_CATS[type]];
   localStorage.setItem(key,JSON.stringify(def));
   return def;
 }
+
 
 function buildCatDropdown(type, query){
   const cats=getCatsSafe(type);
@@ -3664,6 +3682,7 @@ function renderKCNL(){
       <td class="td-act ${cls}" id="kcnl-td-${di}-${hi}">
         <input class="kcnl-act-in" id="kcnl-act-${di}-${hi}"
           value="${(cell.act||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}"
+          oninput="kcnlActInput(${di},${hi},this.value)"
           placeholder="Hoạt động...">
       </td>
       <td class="td-typ ${cls}" id="kcnl-tdt-${di}-${hi}">
@@ -3689,11 +3708,13 @@ function kcnlOnTypeChange(di,hi,val){
   const cls=kcnlTypeClass(val);
   if(td){ td.className='td-act '+cls; }
   if(tdt){ tdt.className='td-typ '+cls; }
-  // Ghi vào bộ nhớ ngay
   const key=kcnlWeekKey(kcnlCurrentWeekStart);
   if(!kcnlWeeks[key]) kcnlWeeks[key]=kcnlBlankWeek(kcnlCurrentWeekStart);
   const actEl=document.getElementById(`kcnl-act-${di}-${hi}`);
   kcnlWeeks[key].days[di].cells[hi]={h:hi,act:actEl?.value||'',type:val};
+  // Auto-save ngay khi chọn loại
+  if(_autoSaveTimer) clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(()=>{ kcnlSave(); syncStatus('ok','Đã lưu ✓'); }, 800);
 }
 
 function renderKCNLHist(){
@@ -3735,7 +3756,22 @@ function kcnlDelWeek(key){
   toast('Đã xóa ✓');
 }
 
-// ═══ INIT KCNL ═══
+// ═══ AUTO-SAVE ═══
+let _autoSaveTimer = null;
+function autoSave(){
+  if(_autoSaveTimer) clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(()=>{ save(); }, 1500);
+}
+// Auto-save KCNL khi gõ hoạt động
+function kcnlActInput(di, hi, val){
+  const key=kcnlWeekKey(kcnlCurrentWeekStart);
+  if(!kcnlWeeks[key]) return;
+  if(kcnlWeeks[key].days[di] && kcnlWeeks[key].days[di].cells[hi]){
+    kcnlWeeks[key].days[di].cells[hi].act = val;
+  }
+  if(_autoSaveTimer) clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(()=>{ kcnlSave(); syncStatus('ok','Đã lưu ✓'); }, 1500);
+}
 load();
 kcnlLoad();
 // Tính thứ 2 của tuần hiện tại theo local time
