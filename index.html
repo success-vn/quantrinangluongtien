@@ -3104,11 +3104,12 @@ function renderTK(){
 
 function renderTKCharts(){
   const range = parseInt(document.getElementById('tk-range')?.value || '6');
+  const months=[], inD=[], outD=[], nlXD=[], nlDD=[];
+
   for(let i=range-1; i>=0; i--){
     const d=new Date(); d.setMonth(d.getMonth()-i);
     const m=d.toISOString().slice(0,7);
-    const lbl=`${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}`;
-    months.push(lbl);
+    months.push(`${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}`);
     const tArr=D.thu.filter(x=>x.date?.startsWith(m));
     const cArr=D.chi.filter(x=>x.date?.startsWith(m));
     inD.push(Math.round(tArr.reduce((a,x)=>a+x.amt,0)));
@@ -3119,23 +3120,24 @@ function renderTKCharts(){
     nlDD.push(Math.round(tdV+cdV));
   }
 
-  const rangeTitle = `${range} Tháng Gần Nhất`;
-  const tcTitle = document.getElementById('tk-chart-tc-title');
-  const nlTitle = document.getElementById('tk-chart-nl-title');
-  if(tcTitle) tcTitle.textContent = `Thu Chi – ${rangeTitle}`;
-  if(nlTitle) nlTitle.textContent = `Năng Lượng – ${rangeTitle}`;
+  const rangeTitle=`${range} Tháng Gần Nhất`;
+  const tcTitle=document.getElementById('tk-chart-tc-title');
+  const nlTitle=document.getElementById('tk-chart-nl-title');
+  if(tcTitle) tcTitle.textContent=`Thu Chi – ${rangeTitle}`;
+  if(nlTitle) nlTitle.textContent=`Năng Lượng – ${rangeTitle}`;
 
-  mkChart('chart-tc6','bar',{labels:months, datasets:[
+  mkChart('chart-tc6','bar',{labels:months,datasets:[
     {label:'Thu',data:inD,backgroundColor:'rgba(45,106,79,.7)',borderRadius:4},
     {label:'Chi',data:outD,backgroundColor:'rgba(139,30,45,.55)',borderRadius:4}
   ]},{scales:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{beginAtZero:true}}});
 
-  mkChart('chart-nl6','bar',{labels:months, datasets:[
+  mkChart('chart-nl6','bar',{labels:months,datasets:[
     {label:'NL Xanh',data:nlXD,backgroundColor:'rgba(45,106,79,.7)',borderRadius:4},
     {label:'NL Đỏ', data:nlDD,backgroundColor:'rgba(139,30,45,.55)',borderRadius:4}
   ]},{scales:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{beginAtZero:true}}});
 
-  // ── BLOCK 4: Danh mục thu (donut) ──
+  // ── BLOCK 4: Danh mục theo tháng đang chọn ──
+  const thuCatsU=[...new Set(_tkThuM.map(x=>x.cat||'Khác'))];
   const thuCatAmts=thuCatsU.map(c=>_tkThuM.filter(x=>(x.cat||'Khác')===c).reduce((a,x)=>a+x.amt,0));
   const thuCatCols=thuCatsU.map((_,i)=>`hsl(${[160,190,130,100,220,60,170][i%7]},45%,42%)`);
   const thuTitleEl=document.getElementById('tk-thu-title');
@@ -3161,7 +3163,6 @@ function renderTKCharts(){
     const d=document.getElementById('thu-cat-detail');if(d)d.innerHTML='<div style="color:var(--ink3);font-size:12px;padding:8px;">Chưa có dữ liệu</div>';
   }
 
-  // Danh mục chi (bar ngang)
   const cats=[...new Set(_tkChiM.map(x=>x.cat||'Khác'))];
   const catAmts=cats.map(c=>_tkChiM.filter(x=>(x.cat||'Khác')===c).reduce((a,x)=>a+x.amt,0));
   const catCols=cats.map((_,i)=>`hsl(${[160,45,220,30,270,10,190,90,340,130,60,200][i%12]},38%,45%)`);
