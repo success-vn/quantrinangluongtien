@@ -1400,22 +1400,10 @@ async function doRegister(){
 
 function signInGoogle(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).then(async cred=>{
-    const snap=await db.ref('/users/'+cred.user.uid).once('value');
-    if(!snap.val()){
-      // User Google mới → tạo record, chờ admin duyệt
-      await db.ref('/users/'+cred.user.uid).set({
-        uid: cred.user.uid,
-        name: cred.user.displayName||'',
-        email: cred.user.email,
-        approved: false,
-        rejected: false,
-        role: 'user',
-        provider: 'google',
-        createdAt: new Date().toISOString()
-      });
-    }
-  }).catch(e=>{ authShowErr('Đăng nhập Google thất bại: '+e.message); });
+  // Dùng redirect thay popup — hoạt động trên cả mobile và desktop
+  auth.signInWithRedirect(provider).catch(e=>{
+    authShowErr('Đăng nhập Google thất bại: '+e.message);
+  });
 }
 
 function confirmSignOut(){
@@ -1449,8 +1437,27 @@ function initFirebase(){
     db = firebase.database();
     auth = firebase.auth();
 
-    auth.onAuthStateChanged(async user => {
-      if(!user){
+    // Xử lý kết quả sau khi redirect từ Google về
+    auth.getRedirectResult().then(async result=>{
+      if(result && result.user){
+        const cred=result;
+        const snap=await db.ref('/users/'+cred.user.uid).once('value');
+        if(!snap.val()){
+          await db.ref('/users/'+cred.user.uid).set({
+            uid: cred.user.uid,
+            name: cred.user.displayName||'',
+            email: cred.user.email,
+            approved: false,
+            rejected: false,
+            role: 'user',
+            provider: 'google',
+            createdAt: new Date().toISOString()
+          });
+        }
+      }
+    }).catch(e=>console.error('Redirect result error:',e));
+
+    auth.onAuthStateChanged(async user => {      if(!user){
         currentUid = null;
         setUserUI(null);
         showAuthScreen('main');
