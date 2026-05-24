@@ -3083,10 +3083,10 @@ function kcnlSave(){
 
 function kcnlGetMonday(date){
   const d=new Date(date);
-  const day=d.getDay();
-  const diff=day===0?-6:1-day;
-  d.setDate(d.getDate()+diff);
   d.setHours(0,0,0,0);
+  const day=d.getDay(); // 0=CN, 1=T2, ..., 6=T7
+  const diff=day===0?-6:1-day; // CN lùi 6, T2 lùi 0, T3 lùi 1...
+  d.setDate(d.getDate()+diff);
   return d;
 }
 
@@ -3125,8 +3125,12 @@ function kcnlBlankWeek(monday){
   for(let i=0;i<7;i++){
     const d=new Date(monday);
     d.setDate(d.getDate()+i);
+    // Format YYYY-MM-DD theo local time, tránh lệch timezone
+    const y=d.getFullYear();
+    const m=String(d.getMonth()+1).padStart(2,'0');
+    const dd=String(d.getDate()).padStart(2,'0');
     days.push({
-      date:d.toISOString().slice(0,10),
+      date:`${y}-${m}-${dd}`,
       cells:KCNL_HOURS.map(h=>({h,act:'',type:''}))
     });
   }
@@ -3187,7 +3191,6 @@ function renderKCNL(){
   const key=kcnlWeekKey(kcnlCurrentWeekStart);
   const week=kcnlWeeks[key];
 
-  // Week label
   const endDate=new Date(kcnlCurrentWeekStart); endDate.setDate(endDate.getDate()+6);
   const fmt2=d=>`${d.getDate()}/${d.getMonth()+1}`;
   const lbl=document.getElementById('kcnl-week-lbl');
@@ -3205,119 +3208,113 @@ function renderKCNL(){
     return;
   }
   if(emptyEl) emptyEl.style.display='none';
-  if(table) table.style.display='';
+  if(table) table.style.display='table';
 
   const DOW=['Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy','Chủ Nhật'];
   const TYPES=KCNL_TYPES;
-
-  // Tính đo lường
   const {G,N,D,total}=kcnlCalcStats(week);
   const pG=total?Math.round(G/total*100):0;
   const pN=total?Math.round(N/total*100):0;
   const pD=total?Math.round(D/total*100):0;
 
-  let html='';
+  // Cột đo lường bên phải: hiện ở đúng hàng như Excel
+  // GỐC ở row 0 (rowspan 1), NHÁNH ở row 3 (rowspan 1), ĐỘC ở row 6 (rowspan 1), MỤC TIÊU ở row 10
+  const msrCell = hi => {
+    if(hi===0) return `
+      <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
+        <div style="font-size:11px;font-weight:700;color:#2d6a4f;">🟢 GỐC</div>
+      </td>
+      <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
+        <div style="font-size:22px;font-weight:700;color:#2d6a4f;">${G}</div>
+      </td>
+      <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
+        <div style="font-size:16px;font-weight:700;color:#2d6a4f;">${pG}%</div>
+        <div class="msr-goal ${pG>=50?'pass':'fail'}">${pG>=50?'✓ ≥50%':'✗ <50%'}</div>
+      </td>`;
+    if(hi===3) return `
+      <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
+        <div style="font-size:11px;font-weight:700;color:#8a6200;">🌿 NHÁNH</div>
+      </td>
+      <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
+        <div style="font-size:22px;font-weight:700;color:#8a6200;">${N}</div>
+      </td>
+      <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
+        <div style="font-size:16px;font-weight:700;color:#8a6200;">${pN}%</div>
+        <div class="msr-goal ${pN>=30&&pN<=40?'pass':'fail'}">${pN>=30&&pN<=40?'✓ 30-40%':'✗ 30-40%'}</div>
+      </td>`;
+    if(hi===6) return `
+      <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
+        <div style="font-size:11px;font-weight:700;color:#8b1e2d;">🔴 ĐỘC</div>
+      </td>
+      <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
+        <div style="font-size:22px;font-weight:700;color:#8b1e2d;">${D}</div>
+      </td>
+      <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
+        <div style="font-size:16px;font-weight:700;color:#8b1e2d;">${pD}%</div>
+        <div class="msr-goal ${pD<10?'pass':'fail'}">${pD<10?'✓ <10%':'✗ <10%'}</div>
+      </td>`;
+    if(hi===10) return `
+      <td class="td-msr" colspan="3" style="text-align:center;vertical-align:middle;background:#f0f7f4;font-size:10px;line-height:1.8;padding:8px;">
+        🎯 MỤC TIÊU<br><b>🟢 GỐC ≥ 50%</b><br><b>🌿 NHÁNH 30–40%</b><br><b>🔴 ĐỘC &lt; 10%</b>
+      </td>`;
+    return `<td class="td-msr" colspan="3" style="background:#fafafa;"></td>`;
+  };
 
-  // Row 1: Tiêu đề lớn + chú thích
-  html+=`<thead>
-  <tr class="r-title">
-    <td colspan="${1+7*2}" style="background:#1a3a2a;color:#fff;font-size:13px;padding:7px 12px;letter-spacing:.5px;">
-      🌿 NĂNG LƯỢNG TUẦN — 5 NGÔI NHÀ &nbsp;|&nbsp; ${fmt2(kcnlCurrentWeekStart)} – ${fmt2(endDate)}/${endDate.getFullYear()}
+  let html=`<thead>
+  <tr>
+    <td colspan="16" style="background:#1a3a2a;color:#fff;font-size:12px;font-weight:600;padding:8px 12px;letter-spacing:.3px;">
+      🌿 NĂNG LƯỢNG TUẦN — 5 NGÔI NHÀ &nbsp;&nbsp; ${fmt2(kcnlCurrentWeekStart)} – ${fmt2(endDate)}/${endDate.getFullYear()}
     </td>
-    <td colspan="3" style="background:#1a3a2a;color:#7dd3a8;font-size:11px;text-align:center;padding:7px;">📊 ĐO LƯỜNG</td>
+    <td colspan="3" style="background:#1a3a2a;color:#7dd3a8;font-size:11px;text-align:center;padding:8px;font-weight:600;">📊 ĐO LƯỜNG CẢ TUẦN</td>
   </tr>
-  <tr class="r-legend">
-    <td style="background:#f5f5f5;"></td>
-    <td colspan="4" class="leg-g">🟢 GỐC — Nuôi dưỡng 5 Ngôi Nhà</td>
-    <td colspan="4" class="leg-n">🌿 NHÁNH / NGỌN — Đầu tư có ích</td>
-    <td colspan="4" class="leg-d">🔴 ĐỘC — Hại + Lãng phí cần cắt bỏ</td>
-    <td colspan="3" class="leg-tip">Click ô "Loại ▼" → chọn → màu tự đổi</td>
-    <td style="background:#f5f5f5;font-size:10px;color:#555;">Loại</td>
-    <td style="background:#f5f5f5;font-size:10px;color:#555;">Số lần</td>
-    <td style="background:#f5f5f5;font-size:10px;color:#555;">Tỉ lệ</td>
+  <tr>
+    <td style="background:#e8f0ec;"></td>
+    <td colspan="4" style="background:#b7e1cd;color:#1a3a2a;font-weight:600;font-size:11px;text-align:center;padding:5px;">🟢 GỐC — Nuôi dưỡng 5 Ngôi Nhà</td>
+    <td colspan="4" style="background:#fff2cc;color:#7a5a00;font-weight:600;font-size:11px;text-align:center;padding:5px;">🌿 NHÁNH / NGỌN — Đầu tư có ích</td>
+    <td colspan="4" style="background:#f4cccc;color:#6b0000;font-weight:600;font-size:11px;text-align:center;padding:5px;">🔴 ĐỘC — Hại + Lãng phí cần cắt bỏ</td>
+    <td colspan="3" style="background:#e8f4fd;color:#1a4a7a;font-size:9px;text-align:center;padding:5px;">Click ô Loại ▼ → chọn → màu tự đổi</td>
+    <td style="background:#e8f0ec;font-size:10px;color:#555;text-align:center;padding:5px;">Loại</td>
+    <td style="background:#e8f0ec;font-size:10px;color:#555;text-align:center;padding:5px;">Số lần</td>
+    <td style="background:#e8f0ec;font-size:10px;color:#555;text-align:center;padding:5px;">Tỉ lệ</td>
   </tr>
-  <tr class="r-days">
-    <th class="th-time">⏰ Giờ</th>`;
+  <tr>
+    <th class="th-time" style="width:46px;">⏰ Giờ</th>`;
 
   week.days.forEach((day,i)=>{
-    const d=new Date(day.date);
-    html+=`<th class="th-act" colspan="2">${DOW[i]}<br><span style="font-weight:400;font-size:10px;">${fmt2(d)}</span></th>`;
+    const [y,m,dd]=day.date.split('-').map(Number);
+    const d=new Date(y,m-1,dd);
+    html+=`<th class="th-act" style="min-width:110px;">📋 ${DOW[i]}<br><span style="font-weight:400;font-size:10px;">${dd}/${m}</span></th>
+           <th class="th-typ" style="min-width:72px;">💡 Loại ▼</th>`;
   });
-  html+=`<th class="th-msr" colspan="3">📊 Cả tuần</th></tr>
-  <tr class="r-sub">
-    <th style="background:#f0f7f4;"></th>`;
-  for(let i=0;i<7;i++){
-    html+=`<th>📋 Hoạt động</th><th>💡 Loại ▼</th>`;
-  }
-  html+=`<th>Loại</th><th>Số lần</th><th>Tỉ lệ</th></tr>
-  </thead><tbody>`;
+  html+=`<th class="th-msr" style="min-width:56px;">Loại</th>
+         <th class="th-msr" style="min-width:48px;">Số lần</th>
+         <th class="th-msr" style="min-width:48px;">Tỉ lệ</th>
+  </tr></thead><tbody>`;
 
-  // Data rows: 24 giờ
   KCNL_HOURS.forEach((h,hi)=>{
-    html+=`<tr class="r-data"><td class="td-time">${String(h).padStart(2,'0')}:00</td>`;
+    html+=`<tr class="r-data">
+      <td class="td-time">${String(h).padStart(2,'0')}:00</td>`;
     week.days.forEach((day,di)=>{
       const cell=day.cells[hi]||{h,act:'',type:''};
       const cls=kcnlTypeClass(cell.type);
-      const opts=TYPES.map(t=>`<option value="${t}"${cell.type===t?' selected':''}>${t}</option>`).join('');
-      html+=`<td class="td-act ${cls}" id="kcnl-td-${di}-${hi}">
-        <input class="kcnl-act-in" id="kcnl-act-${di}-${hi}" value="${(cell.act||'').replace(/"/g,'&quot;')}" placeholder="Hoạt động...">
+      const opts=TYPES.map(t=>
+        `<option value="${t}"${cell.type===t?' selected':''}>${t}</option>`
+      ).join('');
+      html+=`
+      <td class="td-act ${cls}" id="kcnl-td-${di}-${hi}">
+        <input class="kcnl-act-in" id="kcnl-act-${di}-${hi}"
+          value="${(cell.act||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}"
+          placeholder="Hoạt động...">
       </td>
       <td class="td-typ ${cls}" id="kcnl-tdt-${di}-${hi}">
-        <select class="kcnl-typ-sel" id="kcnl-typ-${di}-${hi}" onchange="kcnlOnTypeChange(${di},${hi},this.value)">
+        <select class="kcnl-typ-sel" id="kcnl-typ-${di}-${hi}"
+          onchange="kcnlOnTypeChange(${di},${hi},this.value)">
           <option value="">— Loại —</option>
           ${opts}
         </select>
       </td>`;
     });
-
-    // Phần đo lường bên phải — chỉ hiện ở 3 hàng cụ thể như Excel
-    if(hi===0){
-      html+=`<td class="td-msr" rowspan="3" style="vertical-align:middle;text-align:center;">
-        <div class="msr-g">${pG}%</div>
-        <div style="font-size:10px;color:#2d6a4f;">🟢 GỐC</div>
-        <div class="msr-pct">${G} lần</div>
-        <div class="msr-goal ${pG>=50?'pass':'fail'}">${pG>=50?'✓ ≥50%':'✗ <50%'}</div>
-      </td>
-      <td class="td-msr" rowspan="3" style="text-align:center;vertical-align:middle;">
-        <div style="font-size:20px;font-weight:700;color:#2d6a4f;">${G}</div>
-      </td>
-      <td class="td-msr" rowspan="3" style="text-align:center;vertical-align:middle;">
-        <div style="font-size:14px;font-weight:700;color:#2d6a4f;">${pG}%</div>
-      </td>`;
-    } else if(hi===3){
-      html+=`<td class="td-msr" rowspan="3" style="vertical-align:middle;text-align:center;">
-        <div class="msr-n">${pN}%</div>
-        <div style="font-size:10px;color:#8a6200;">🌿 NHÁNH</div>
-        <div class="msr-pct">${N} lần</div>
-        <div class="msr-goal ${pN>=30&&pN<=40?'pass':'fail'}">${pN>=30&&pN<=40?'✓ 30-40%':'✗ 30-40%'}</div>
-      </td>
-      <td class="td-msr" rowspan="3" style="text-align:center;vertical-align:middle;">
-        <div style="font-size:20px;font-weight:700;color:#8a6200;">${N}</div>
-      </td>
-      <td class="td-msr" rowspan="3" style="text-align:center;vertical-align:middle;">
-        <div style="font-size:14px;font-weight:700;color:#8a6200;">${pN}%</div>
-      </td>`;
-    } else if(hi===6){
-      html+=`<td class="td-msr" rowspan="3" style="vertical-align:middle;text-align:center;">
-        <div class="msr-d">${pD}%</div>
-        <div style="font-size:10px;color:#8b1e2d;">🔴 ĐỘC</div>
-        <div class="msr-pct">${D} lần</div>
-        <div class="msr-goal ${pD<10?'pass':'fail'}">${pD<10?'✓ <10%':'✗ <10%'}</div>
-      </td>
-      <td class="td-msr" rowspan="3" style="text-align:center;vertical-align:middle;">
-        <div style="font-size:20px;font-weight:700;color:#8b1e2d;">${D}</div>
-      </td>
-      <td class="td-msr" rowspan="3" style="text-align:center;vertical-align:middle;">
-        <div style="font-size:14px;font-weight:700;color:#8b1e2d;">${pD}%</div>
-      </td>`;
-    } else if(hi===10){
-      html+=`<td class="td-msr" colspan="3" style="text-align:center;vertical-align:middle;background:#f0f7f4;font-size:10px;padding:6px;">
-        🎯 MỤC TIÊU<br>🟢 GỐC ≥ 50%<br>🌿 NHÁNH 30–40%<br>🔴 ĐỘC &lt; 10%
-      </td>`;
-    } else if(![1,2,4,5,7,8,9,11].includes(hi)){
-      html+=`<td class="td-msr" colspan="3" style="background:#f9f9f9;"></td>`;
-    }
-
+    html += msrCell(hi);
     html+=`</tr>`;
   });
 
