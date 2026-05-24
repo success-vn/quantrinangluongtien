@@ -837,6 +837,16 @@ textarea{resize:none;min-height:52px;}
 <div id="tab-no-tai-san" class="page">
   <div class="sbar" id="nts-sbar"></div>
 
+  <!-- Card chi phí lãi vay -->
+  <div class="card" id="card-lai-vay" style="margin-bottom:14px;display:none;">
+    <div class="card-hdr">
+      <span class="card-title">🔥 Chi Phí Lãi Vay Hàng Tháng</span>
+      <span style="font-size:11px;color:var(--ink3);">Tính trên dư nợ hiện tại</span>
+    </div>
+    <div id="lai-vay-list"></div>
+    <div id="lai-vay-total" style="padding:10px 16px;border-top:2px solid var(--bd2);background:var(--rbg);"></div>
+  </div>
+
   <div class="two-col">
     <!-- NỢ -->
     <div>
@@ -1093,7 +1103,38 @@ textarea{resize:none;min-height:52px;}
     </div>
   </div>
 
-  <!-- BLOCK 7: Xu hướng Nợ / Cho vay / Tài sản -->
+  <!-- BLOCK 8: Tương quan NL ↔ Dòng tiền -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hdr">
+      <span class="card-title">🔗 Tương Quan NL ↔ Dòng Tiền</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--ink3);">Xem theo:</span>
+        <select id="tk-corr-range" onchange="renderTKCorr()" style="font-size:11px;padding:3px 8px;border:1px solid var(--bd2);border-radius:6px;background:var(--card);font-family:var(--sans);">
+          <option value="4">4 tuần</option>
+          <option value="8" selected>8 tuần</option>
+          <option value="12">12 tuần</option>
+        </select>
+      </div>
+    </div>
+    <!-- Insight tóm tắt -->
+    <div id="tk-corr-insight" style="padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--xbg);font-size:12px;display:none;"></div>
+    <!-- 2 biểu đồ song song -->
+    <div class="two-col" style="padding:14px;gap:12px;">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">% NL Gốc vs Thu vào (đ)</div>
+        <div class="chart-wrap"><canvas id="chart-corr-g"></canvas></div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">% NL Độc vs Chi ra NL Đỏ (đ)</div>
+        <div class="chart-wrap"><canvas id="chart-corr-d"></canvas></div>
+      </div>
+    </div>
+    <!-- Bảng tóm tắt theo tuần -->
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;" id="tk-corr-table"></table>
+    </div>
+  </div>
+</div>
   <div class="card" style="margin-bottom:14px;">
     <div class="card-hdr">
       <span class="card-title">📉 Xu Hướng Nợ · Cho Vay · Tài Sản</span>
@@ -2777,12 +2818,20 @@ function renderNTS(){
   const tsT=D.ts.reduce((a,t)=>a+t.val,0);
   const rong=tsT-noT;
 
+  // Tính lãi tháng dự tính
+  const laiThang = D.no.filter(d=>!d.done&&d.ls>0)
+    .reduce((a,d)=> a + (d.con * (parseFloat(d.ls)||0) / 12 / 100), 0);
+  const laiNam = laiThang * 12;
+
   document.getElementById('nts-sbar').innerHTML=`
     <div class="sc"><div class="sc-lbl">Tôi Được Hỗ Trợ</div><div class="sc-val rv">${fmt(noT)}</div></div>
     <div class="sc"><div class="sc-lbl">Tôi Đang Hỗ Trợ</div><div class="sc-val cv">${fmt(vtT)}</div></div>
     <div class="sc"><div class="sc-lbl">Tổng Tài Sản</div><div class="sc-val cv">${fmt(tsT)}</div></div>
     <div class="sc"><div class="sc-lbl">Tài Sản Ròng</div><div class="sc-val ${rong>=0?'cv':'rv'}">${fmt(rong)}</div></div>
-    <div class="sc"><div class="sc-lbl">Chênh Lệch</div><div class="sc-val ${vtT-noT>=0?'cv':'rv'}">${fmt(vtT-noT)}</div></div>`;
+    <div class="sc"><div class="sc-lbl">🔥 Lãi Tháng Dự Tính</div><div class="sc-val rv">${fmt(Math.round(laiThang))}</div><div class="sc-sub">${fmt(Math.round(laiNam))}/năm</div></div>`;
+
+  // Card chi phí lãi chi tiết
+  renderLaiVay();
 
   // Group by person name
   function groupAndRender(rows, tbody, type){
@@ -3159,6 +3208,7 @@ function renderTK(){
   // Gọi biểu đồ quỹ & xu hướng
   renderTKFundCharts();
   renderTKNtsCharts();
+  renderTKCorr();
 }
 
 // ═══ BIỂU ĐỒ QUỸ BẢO AN ═══
@@ -3421,7 +3471,55 @@ function renderAll(){
   else if(id==='tab-thong-ke')renderTK();
 }
 
-// ═══ KHỐI CẦU NĂNG LƯỢNG ═══
+// ═══ TÍNH LÃI VAY ═══
+function renderLaiVay(){
+  const noCoLai = D.no.filter(d=>!d.done && parseFloat(d.ls)>0);
+  const card = document.getElementById('card-lai-vay');
+  const list = document.getElementById('lai-vay-list');
+  const total = document.getElementById('lai-vay-total');
+  if(!card||!list||!total) return;
+
+  if(!noCoLai.length){ card.style.display='none'; return; }
+  card.style.display='';
+
+  let tongLaiThang=0, tongLaiNam=0;
+  list.innerHTML = noCoLai.map(d=>{
+    const laiThang = d.con * (parseFloat(d.ls)||0) / 12 / 100;
+    const laiNam   = laiThang * 12;
+    const tyLe     = d.goc ? Math.round(d.con/d.goc*100) : 100;
+    tongLaiThang  += laiThang;
+    tongLaiNam    += laiNam;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--bd);">
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:500;">${d.chu}</div>
+        <div style="font-size:11px;color:var(--ink3);">
+          Dư nợ: ${fmt(d.con)} / ${fmt(d.goc)} (${tyLe}%) · Lãi ${d.ls}%/năm
+          ${d.han?` · Hạn: ${d.han}`:''}
+        </div>
+        <!-- Thanh tiến độ trả nợ -->
+        <div style="height:4px;background:var(--bd);border-radius:2px;margin-top:4px;overflow:hidden;">
+          <div style="height:100%;background:var(--x);border-radius:2px;width:${100-tyLe}%;"></div>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:15px;font-weight:700;color:var(--r);">${fmt(Math.round(laiThang))}<span style="font-size:10px;font-weight:400;">/tháng</span></div>
+        <div style="font-size:11px;color:var(--ink3);">${fmt(Math.round(laiNam))}/năm</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  total.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--r);">🔥 Tổng chi phí lãi mỗi tháng</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:2px;">Đây là tiền "cháy" — không tạo ra tài sản</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:22px;font-weight:700;color:var(--r);">${fmt(Math.round(tongLaiThang))}</div>
+        <div style="font-size:11px;color:var(--ink3);">${fmt(Math.round(tongLaiNam))}/năm</div>
+      </div>
+    </div>`;
+}
 const KCNL_HOURS = Array.from({length:24},(_,i)=>i); // 0–23h
 const KCNL_TYPES = [
   '[G] Nhà 1 - Bản thân','[G] Nhà 2 - Cha mẹ','[G] Nhà 3 - Vợ / chồng',
@@ -3754,6 +3852,106 @@ function kcnlDelWeek(key){
   kcnlSave();
   renderKCNL();
   toast('Đã xóa ✓');
+}
+
+// ═══ TƯƠNG QUAN NL ↔ DÒNG TIỀN ═══
+function renderTKCorr(){
+  const range=parseInt(document.getElementById('tk-corr-range')?.value||'8');
+  const weekData=[];
+  const now=new Date();
+
+  for(let i=range-1;i>=0;i--){
+    const wStart=new Date(now);
+    const dow=wStart.getDay();
+    const diff=dow===0?-6:1-dow;
+    wStart.setDate(wStart.getDate()+diff-(i*7));
+    wStart.setHours(0,0,0,0);
+    const wEnd=new Date(wStart); wEnd.setDate(wEnd.getDate()+6);
+    const wKey=kcnlFmtDate(wStart);
+    const wEndKey=kcnlFmtDate(wEnd);
+    const lbl=`${wStart.getDate()}/${wStart.getMonth()+1}`;
+
+    // NL từ KCNL
+    const kcnlW=kcnlWeeks[wKey];
+    let pG=0,pD=0,hasKcnl=false;
+    if(kcnlW){
+      const st=kcnlCalcStats(kcnlW);
+      if(st.total>0){ pG=Math.round(st.G/st.total*100); pD=Math.round(st.D/st.total*100); hasKcnl=true; }
+    }
+
+    // Thu/Chi trong tuần
+    const inW=x=>x.date&&x.date>=wKey&&x.date<=wEndKey;
+    const thuW=D.thu.filter(inW), chiW=D.chi.filter(inW);
+    const thuT=thuW.reduce((a,x)=>a+x.amt,0);
+    const chiNLD=chiW.filter(x=>x.nl==='do').reduce((a,x)=>a+x.amt,0);
+    const thuNLX=thuW.filter(x=>x.nl==='xanh').reduce((a,x)=>a+x.amt,0);
+    const nlRong=thuNLX-chiNLD;
+    weekData.push({lbl,wKey,pG,pD,hasKcnl,thuT,chiNLD,nlRong});
+  }
+
+  // Biểu đồ 1: % GỐC vs Thu vào
+  mkChart('chart-corr-g','bar',{
+    labels:weekData.map(w=>w.lbl),
+    datasets:[
+      {label:'% NL Gốc',data:weekData.map(w=>w.pG),backgroundColor:'rgba(45,106,79,.7)',borderRadius:4,yAxisID:'y'},
+      {label:'Thu vào',data:weekData.map(w=>w.thuT),backgroundColor:'rgba(45,106,79,.15)',borderColor:'#2d6a4f',borderWidth:2,type:'line',yAxisID:'y2',tension:.3,pointRadius:3}
+    ]
+  },{scales:{
+    y:{beginAtZero:true,max:100,position:'left',ticks:{callback:v=>v+'%',font:{size:10}}},
+    y2:{beginAtZero:true,position:'right',ticks:{callback:v=>fmtAxis(v),font:{size:10}},grid:{display:false}}
+  }});
+
+  // Biểu đồ 2: % ĐỘC vs Chi NL Đỏ
+  mkChart('chart-corr-d','bar',{
+    labels:weekData.map(w=>w.lbl),
+    datasets:[
+      {label:'% NL Độc',data:weekData.map(w=>w.pD),backgroundColor:'rgba(139,30,45,.65)',borderRadius:4,yAxisID:'y'},
+      {label:'Chi NL Đỏ',data:weekData.map(w=>w.chiNLD),backgroundColor:'rgba(139,30,45,.15)',borderColor:'#8b1e2d',borderWidth:2,type:'line',yAxisID:'y2',tension:.3,pointRadius:3}
+    ]
+  },{scales:{
+    y:{beginAtZero:true,max:100,position:'left',ticks:{callback:v=>v+'%',font:{size:10}}},
+    y2:{beginAtZero:true,position:'right',ticks:{callback:v=>fmtAxis(v),font:{size:10}},grid:{display:false}}
+  }});
+
+  // Bảng tóm tắt
+  const tbl=document.getElementById('tk-corr-table');
+  if(tbl){
+    tbl.innerHTML=`<thead><tr style="background:var(--bg);">
+      <th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--ink3);border-bottom:1px solid var(--bd);">Tuần</th>
+      <th style="padding:7px 8px;text-align:center;font-size:10px;color:#2d6a4f;border-bottom:1px solid var(--bd);">🟢 GỐC</th>
+      <th style="padding:7px 8px;text-align:center;font-size:10px;color:#8b1e2d;border-bottom:1px solid var(--bd);">🔴 ĐỘC</th>
+      <th style="padding:7px 8px;text-align:right;font-size:10px;color:var(--ink3);border-bottom:1px solid var(--bd);">Thu vào</th>
+      <th style="padding:7px 8px;text-align:right;font-size:10px;color:var(--ink3);border-bottom:1px solid var(--bd);">Chi NL Đỏ</th>
+      <th style="padding:7px 8px;text-align:right;font-size:10px;color:#7c3aed;border-bottom:1px solid var(--bd);">NL Ròng TC</th>
+    </tr></thead><tbody>${weekData.map(w=>`<tr style="border-bottom:1px solid var(--bd);">
+      <td style="padding:7px 10px;font-size:12px;font-weight:500;">${w.lbl}${!w.hasKcnl?'<span style="font-size:9px;color:var(--ink3);margin-left:4px;">chưa ghi NL</span>':''}</td>
+      <td style="text-align:center;padding:7px 8px;font-size:12px;font-weight:600;color:${w.pG>=50?'#2d6a4f':'#8b1e2d'}">${w.hasKcnl?w.pG+'%':'–'}</td>
+      <td style="text-align:center;padding:7px 8px;font-size:12px;font-weight:600;color:${w.pD<10?'#2d6a4f':'#8b1e2d'}">${w.hasKcnl?w.pD+'%':'–'}</td>
+      <td style="text-align:right;padding:7px 8px;font-size:12px;color:var(--x);">${w.thuT?'+'+fmt(w.thuT):'–'}</td>
+      <td style="text-align:right;padding:7px 8px;font-size:12px;color:var(--r);">${w.chiNLD?'−'+fmt(w.chiNLD):'–'}</td>
+      <td style="text-align:right;padding:7px 8px;font-size:12px;font-weight:600;color:${w.nlRong>=0?'#7c3aed':'#8b1e2d'};">${w.thuT||w.chiNLD?(w.nlRong>=0?'+':'')+fmt(w.nlRong):'–'}</td>
+    </tr>`).join('')}</tbody>`;
+  }
+
+  // Insight
+  const insight=document.getElementById('tk-corr-insight');
+  if(!insight) return;
+  const pairs=weekData.filter(w=>w.hasKcnl&&w.thuT>0);
+  if(pairs.length<2){ insight.style.display='none'; return; }
+  insight.style.display='block';
+  const hiG=pairs.filter(w=>w.pG>=50), loG=pairs.filter(w=>w.pG<50);
+  const avgHi=hiG.length?hiG.reduce((a,w)=>a+w.thuT,0)/hiG.length:0;
+  const avgLo=loG.length?loG.reduce((a,w)=>a+w.thuT,0)/loG.length:0;
+  if(hiG.length&&loG.length){
+    const ratio=avgLo>0?avgHi/avgLo:0;
+    insight.innerHTML=ratio>1.1
+      ?`📈 Tuần NL GỐC ≥50%: thu trung bình <b style="color:var(--x)">${fmt(Math.round(avgHi))}</b> — cao hơn <b>${Math.round((ratio-1)*100)}%</b> so với tuần GỐC thấp (<b>${fmt(Math.round(avgLo))}</b>). Năng lượng gốc đang nuôi dưỡng dòng tiền! 🌿`
+      :ratio<0.9
+      ?`🤔 Tuần NL GỐC ≥50%: thu trung bình <b>${fmt(Math.round(avgHi))}</b> — thấp hơn tuần GỐC thấp. Hãy xem lại nguồn thu và chiến lược hành động.`
+      :`📊 Thu nhập tuần GỐC cao và thấp khá tương đương. Tiếp tục ghi để thấy tương quan rõ hơn theo thời gian.`;
+  } else {
+    insight.innerHTML=`📊 Cần thêm dữ liệu cả 2 chiều — hãy ghi đều khối cầu NL và thu chi mỗi tuần.`;
+  }
 }
 
 // ═══ AUTO-SAVE ═══
