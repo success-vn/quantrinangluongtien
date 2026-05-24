@@ -981,32 +981,35 @@ textarea{resize:none;min-height:52px;}
         style="font-size:12px;padding:4px 8px;border:1px solid var(--bd2);border-radius:8px;background:var(--card);font-family:var(--sans);color:var(--ink);"
         onchange="onTKMonthChange(this.value)">
       <button class="btn btn-g" onclick="onTKMonthChange('')">Tháng này</button>
-      <span style="font-size:12px;color:var(--ink3);margin-left:6px;">Biểu đồ:</span>
-      <select id="tk-range" onchange="renderTK()" style="font-size:12px;padding:4px 8px;border:1px solid var(--bd2);border-radius:8px;background:var(--card);font-family:var(--sans);">
-        <option value="3">3 tháng</option>
-        <option value="6" selected>6 tháng</option>
-        <option value="9">9 tháng</option>
-        <option value="12">12 tháng</option>
-      </select>
-    </div>
   </div>
 
   <!-- BLOCK 1: Kế toán tháng -->
   <div class="card" style="margin-bottom:14px;">
     <div class="card-hdr"><span class="card-title">📒 Kế Toán Tháng</span><span id="tk-month-lbl" style="font-size:11px;color:var(--ink3);"></span></div>
-    <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead>
-          <tr style="background:var(--bg);">
-            <th style="padding:10px 16px;text-align:left;font-weight:600;color:var(--ink3);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd);">Hạng mục</th>
-            <th style="padding:10px 16px;text-align:right;font-weight:600;color:var(--x);font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--bd);">THU (+)</th>
-            <th style="padding:10px 16px;text-align:right;font-weight:600;color:var(--r);font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--bd);">CHI (−)</th>
-          </tr>
-        </thead>
-        <tbody id="tk-kt-body"></tbody>
-        <tfoot id="tk-kt-foot"></tfoot>
-      </table>
+    <div class="two-col" style="gap:0;border-top:1px solid var(--bd);">
+      <!-- Cột THU -->
+      <div style="border-right:2px solid var(--bd2);">
+        <div style="padding:8px 14px;background:var(--xbg);font-size:11px;font-weight:700;color:var(--x);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd);">
+          💚 THU VÀO <span id="tk-thu-total-lbl" style="float:right;font-family:var(--serif);font-size:14px;"></span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <tbody id="tk-kt-thu"></tbody>
+          <tfoot id="tk-kt-thu-foot"></tfoot>
+        </table>
+      </div>
+      <!-- Cột CHI -->
+      <div>
+        <div style="padding:8px 14px;background:var(--bg);font-size:11px;font-weight:700;color:#1a6b5a;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd);">
+          🏷️ CHI RA <span id="tk-chi-total-lbl" style="float:right;font-family:var(--serif);font-size:14px;color:#1a6b5a;"></span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <tbody id="tk-kt-chi"></tbody>
+          <tfoot id="tk-kt-chi-foot"></tfoot>
+        </table>
+      </div>
     </div>
+    <!-- Tổng kết chung -->
+    <div id="tk-kt-summary" style="padding:10px 16px;border-top:2px solid var(--bd2);background:var(--bg);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"></div>
   </div>
 
   <!-- BLOCK 2: Năng lượng tiền tháng -->
@@ -1029,14 +1032,28 @@ textarea{resize:none;min-height:52px;}
   </div>
 
   <!-- BLOCK 3: Biểu đồ thu chi + NL theo thời gian -->
-  <div class="two-col" style="margin-bottom:14px;">
-    <div class="card">
-      <div class="card-hdr"><span class="card-title" id="tk-chart-tc-title">📈 Thu Chi</span></div>
-      <div style="padding:14px;"><div class="chart-wrap"><canvas id="chart-tc6"></canvas></div></div>
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hdr">
+      <span class="card-title">📈 Biểu Đồ Thu Chi & Năng Lượng</span>
+      <div style="display:flex;align-items:center;gap:5px;">
+        <span style="font-size:11px;color:var(--ink3);">Xem theo:</span>
+        <select id="tk-range" onchange="renderTKCharts()" style="font-size:11px;padding:3px 8px;border:1px solid var(--bd2);border-radius:6px;background:var(--card);font-family:var(--sans);">
+          <option value="3">3 tháng</option>
+          <option value="6" selected>6 tháng</option>
+          <option value="9">9 tháng</option>
+          <option value="12">12 tháng</option>
+        </select>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title" id="tk-chart-nl-title">⚡ Năng Lượng Tiền</span></div>
-      <div style="padding:14px;"><div class="chart-wrap"><canvas id="chart-nl6"></canvas></div></div>
+    <div class="two-col" style="padding:14px;gap:12px;">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;" id="tk-chart-tc-title">Thu Chi</div>
+        <div class="chart-wrap"><canvas id="chart-tc6"></canvas></div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;" id="tk-chart-nl-title">Năng Lượng Tiền</div>
+        <div class="chart-wrap"><canvas id="chart-nl6"></canvas></div>
+      </div>
     </div>
   </div>
 
@@ -2397,13 +2414,16 @@ function renderTC(){
     const el=document.getElementById(tbody);if(!el)return;
     if(!rows.length){el.innerHTML=`<tr><td colspan="6"><div class="empty">Chưa có dữ liệu tháng này</div></td></tr>`;return;}
     el.innerHTML=rows.map(r=>{
-      const cls='ain';
+      const nlC={'xanh':'#2d6a4f','vang':'#8a6200','do':'#8b1e2d'};
+      const nlE={'xanh':'💚','vang':'💛','do':'❤️'};
       return`<tr>
         <td class="col-dot">${nlDot(r.nl)}</td>
         <td><div style="font-size:12px;font-weight:500">${r.desc}</div></td>
         <td>${catChip(r.cat)}</td>
         <td style="color:var(--ink3);font-size:11px">${r.date}</td>
-        <td class="amt ${cls}">+${fmt(r.amt)}</td>
+        <td class="amt ain" style="white-space:nowrap;">
+          <span style="font-size:11px;margin-right:3px;">${nlE[r.nl]||'💛'}</span>+${fmt(r.amt)}
+        </td>
         <td><button class="exp-btn" onclick="expToggle(this,'exp-${type}-${r.id}')">▾</button></td>
       </tr>
       <tr id="exp-${type}-${r.id}"><td colspan="6" style="padding:0">
@@ -2462,16 +2482,19 @@ function renderTC(){
 
       // Các giao dịch trong ngày
       dayRows.forEach(r=>{
-        const nlColors={'xanh':'#2d6a4f','vang':'#8a6200','do':'#8b1e2d'};
         const nlBg={'xanh':'var(--xbg)','vang':'var(--vbg)','do':'var(--rbg)'};
+        const nlColors={'xanh':'#2d6a4f','vang':'#8a6200','do':'#8b1e2d'};
+        const nlE={'xanh':'💚','vang':'💛','do':'❤️'};
         html+=`<tr style="border-left:3px solid ${nlColors[r.nl]||'#ccc'};">
           <td class="col-dot" style="padding-left:4px;">
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:${nlBg[r.nl]||'var(--bg)'};font-size:11px;">${r.nl==='xanh'?'💚':r.nl==='do'?'❤️':'💛'}</span>
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:${nlBg[r.nl]||'var(--bg)'};font-size:11px;">${nlE[r.nl]||'💛'}</span>
           </td>
           <td><div style="font-size:12px;font-weight:500">${r.desc}</div></td>
           <td>${catChip(r.cat)}</td>
           <td style="color:var(--ink3);font-size:11px;"></td>
-          <td class="amt aout">−${fmt(r.amt)}</td>
+          <td style="text-align:right;font-weight:500;color:#1a6b5a;white-space:nowrap;font-size:12px;">
+            <span style="font-size:11px;margin-right:2px;">${nlE[r.nl]||'💛'}</span>−${fmt(r.amt)}
+          </td>
           <td><button class="exp-btn" onclick="expToggle(this,'exp-${type}-${r.id}')">▾</button></td>
         </tr>
         <tr id="exp-${type}-${r.id}"><td colspan="6" style="padding:0">
@@ -2983,40 +3006,62 @@ function renderTK(){
   // ── Helpers NL ──
   const nlSum = (arr, color) => arr.filter(x=>x.nl===color).reduce((a,x)=>a+x.amt, 0);
 
-  // ── BLOCK 1: Kế toán ──
-  const thuT = thuM.reduce((a,x)=>a+x.amt, 0);
-  const chiT = chiM.reduce((a,x)=>a+x.amt, 0);
+  // ── BLOCK 1: Kế toán 2 cột ──
+  const thuT = thuM.reduce((a,x)=>a+x.amt,0);
+  const chiT = chiM.reduce((a,x)=>a+x.amt,0);
   const conlai = thuT - chiT;
+  const savingsRate = thuT ? Math.round((thuT-chiT)/thuT*100) : 0;
+  const thuCatsAll=[...new Set(thuM.map(x=>x.cat||'Khác'))];
+  const chiCatsAll=[...new Set(chiM.map(x=>x.cat||'Khác'))];
 
-  // Kế toán theo danh mục thu
-  const thuCats = [...new Set(thuM.map(x=>x.cat||'Khác'))];
-  const chiCats  = [...new Set(chiM.map(x=>x.cat||'Khác'))];
-  const allCats  = [...new Set([...thuCats,...chiCats])];
-
-  const ktBody = document.getElementById('tk-kt-body');
-  const ktFoot = document.getElementById('tk-kt-foot');
-  if(ktBody){
-    if(!allCats.length){
-      ktBody.innerHTML = `<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--ink3);font-size:12px;">Chưa có dữ liệu tháng này</td></tr>`;
-    } else {
-      ktBody.innerHTML = allCats.map(cat=>{
-        const thuC = thuM.filter(x=>(x.cat||'Khác')===cat).reduce((a,x)=>a+x.amt,0);
-        const chiC  = chiM.filter(x=>(x.cat||'Khác')===cat).reduce((a,x)=>a+x.amt,0);
-        return `<tr class="tk-tr">
-          <td style="font-size:13px;">${cat}</td>
-          <td style="text-align:right;">${thuC?`<span class="tk-num tk-pos">+${fmt(thuC)}</span>`:'<span class="tk-neu">–</span>'}</td>
-          <td style="text-align:right;">${chiC?`<span class="tk-num tk-neg">−${fmt(chiC)}</span>`:'<span class="tk-neu">–</span>'}</td>
-        </tr>`;
-      }).join('');
+  const mkKtRows=(cats,arr,total,bodyId,footId,sign,color,totalLblId)=>{
+    const body=document.getElementById(bodyId);
+    const foot=document.getElementById(footId);
+    const tlbl=document.getElementById(totalLblId);
+    if(tlbl) tlbl.textContent=fmt(total);
+    if(!body) return;
+    if(!cats.length){
+      body.innerHTML=`<tr><td colspan="3" style="padding:12px 14px;color:var(--ink3);font-size:12px;">Chưa có dữ liệu</td></tr>`;
+      if(foot) foot.innerHTML='';
+      return;
     }
-  }
-  if(ktFoot){
-    ktFoot.innerHTML = `<tr class="tk-foot">
-      <td style="font-size:12px;color:var(--ink3);">Tổng · Còn lại: <span class="tk-num ${conlai>=0?'tk-pos':'tk-neg'}">${conlai>=0?'+':''}${fmt(conlai)}</span></td>
-      <td style="text-align:right;"><span class="tk-num tk-pos">+${fmt(thuT)}</span><div class="tk-sub">${thuM.length} giao dịch</div></td>
-      <td style="text-align:right;"><span class="tk-num tk-neg">−${fmt(chiT)}</span><div class="tk-sub">${chiM.length} giao dịch</div></td>
+    // Sắp xếp theo giá trị giảm dần
+    const sorted=cats.map(cat=>{
+      const amt=arr.filter(x=>(x.cat||'Khác')===cat).reduce((a,x)=>a+x.amt,0);
+      return{cat,amt};
+    }).sort((a,b)=>b.amt-a.amt);
+
+    body.innerHTML=sorted.map(({cat,amt})=>{
+      const pct=total?Math.round(amt/total*100):0;
+      return`<tr class="tk-tr">
+        <td style="padding:8px 14px;font-size:12px;">${cat}</td>
+        <td style="padding:8px 8px;width:80px;">
+          <div style="height:5px;background:var(--bd);border-radius:3px;overflow:hidden;">
+            <div style="height:100%;background:${color};border-radius:3px;width:${pct}%;"></div>
+          </div>
+        </td>
+        <td style="padding:8px 14px;text-align:right;font-size:12px;font-weight:600;color:${color};">
+          ${sign}${fmt(amt)}<div style="font-size:10px;font-weight:400;color:var(--ink3);">${pct}%</div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    if(foot) foot.innerHTML=`<tr style="background:var(--bg);">
+      <td colspan="2" style="padding:9px 14px;font-size:11px;font-weight:600;color:var(--ink3);">Tổng · ${arr.length} giao dịch</td>
+      <td style="padding:9px 14px;text-align:right;font-family:var(--serif);font-size:15px;font-weight:700;color:${color};">${sign}${fmt(total)}</td>
     </tr>`;
-  }
+  };
+
+  mkKtRows(thuCatsAll,thuM,thuT,'tk-kt-thu','tk-kt-thu-foot','+','#2d6a4f','tk-thu-total-lbl');
+  mkKtRows(chiCatsAll,chiM,chiT,'tk-kt-chi','tk-kt-chi-foot','−','#1a6b5a','tk-chi-total-lbl');
+
+  // Tổng kết chung
+  const sumEl=document.getElementById('tk-kt-summary');
+  if(sumEl) sumEl.innerHTML=`
+    <div style="font-size:12px;color:var(--ink3);">Còn lại tháng này</div>
+    <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:${conlai>=0?'var(--x)':'var(--r)'};">${conlai>=0?'+':''}${fmt(conlai)}</div>
+    <div style="font-size:12px;color:#7c3aed;font-weight:600;">Tỷ lệ tiết kiệm: ${savingsRate}%</div>
+    <div style="font-size:11px;color:var(--ink3);">${thuM.length} khoản thu · ${chiM.length} khoản chi</div>`;
 
   // ── BLOCK 2: Năng lượng ──
   const thuX = nlSum(thuM,'xanh'), thuD = nlSum(thuM,'do');
@@ -3048,8 +3093,12 @@ function renderTK(){
     </tr>`;
   }
 
-  // ── BLOCK 3: Biểu đồ theo range ──
-  const months=[], inD=[], outD=[], nlXD=[], nlDD=[];
+  // ── BLOCK 3: gọi hàm riêng ──
+  renderTKCharts();
+}
+
+function renderTKCharts(){
+  const range = parseInt(document.getElementById('tk-range')?.value || '6');
   for(let i=range-1; i>=0; i--){
     const d=new Date(); d.setMonth(d.getMonth()-i);
     const m=d.toISOString().slice(0,7);
@@ -3065,11 +3114,11 @@ function renderTK(){
     nlDD.push(Math.round(tdV+cdV));
   }
 
-  const rangeTitle = range===6?'6 Tháng Gần Nhất':'12 Tháng Gần Nhất';
+  const rangeTitle = `${range} Tháng Gần Nhất`;
   const tcTitle = document.getElementById('tk-chart-tc-title');
   const nlTitle = document.getElementById('tk-chart-nl-title');
-  if(tcTitle) tcTitle.textContent = `📈 Thu Chi – ${rangeTitle}`;
-  if(nlTitle) nlTitle.textContent = `⚡ Năng Lượng – ${rangeTitle}`;
+  if(tcTitle) tcTitle.textContent = `Thu Chi – ${rangeTitle}`;
+  if(nlTitle) nlTitle.textContent = `Năng Lượng – ${rangeTitle}`;
 
   mkChart('chart-tc6','bar',{labels:months, datasets:[
     {label:'Thu',data:inD,backgroundColor:'rgba(45,106,79,.7)',borderRadius:4},
@@ -3082,7 +3131,6 @@ function renderTK(){
   ]},{scales:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{beginAtZero:true}}});
 
   // ── BLOCK 4: Danh mục thu (donut) ──
-  const thuCatsU=[...new Set(thuM.map(x=>x.cat||'Khác'))];
   const thuCatAmts=thuCatsU.map(c=>thuM.filter(x=>(x.cat||'Khác')===c).reduce((a,x)=>a+x.amt,0));
   const thuCatCols=thuCatsU.map((_,i)=>`hsl(${[160,190,130,100,220,60,170][i%7]},45%,42%)`);
   const thuTitleEl=document.getElementById('tk-thu-title');
