@@ -297,6 +297,52 @@ textarea{resize:none;min-height:52px;}
 .btn-chuyen-hoa:hover{background:var(--x);color:#fff;}
 .btn-chuyen-hoa.done{border-color:var(--bd);background:#f0f0f0;color:#888;cursor:default;}
 
+/* ── KHỐI CẦU NĂNG LƯỢNG ── */
+.kcnl-week-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.kcnl-week-lbl{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--ink);min-width:160px;text-align:center;}
+
+/* Bảng chính */
+.kcnl-grid-wrap{overflow-x:auto;margin-bottom:0;}
+.kcnl-grid{border-collapse:collapse;font-size:11px;table-layout:fixed;}
+/* Header rows */
+.kcnl-grid .r-title td{background:#1a3a2a;color:#fff;font-weight:700;font-size:13px;padding:7px 10px;text-align:center;}
+.kcnl-grid .r-legend td{padding:4px 6px;font-size:10px;font-weight:600;text-align:center;}
+.kcnl-grid .r-legend .leg-g{background:#b7e1cd;color:#1a3a2a;}
+.kcnl-grid .r-legend .leg-n{background:#fff2cc;color:#7a5a00;}
+.kcnl-grid .r-legend .leg-d{background:#f4cccc;color:#6b0000;}
+.kcnl-grid .r-legend .leg-tip{background:#e8f4fd;color:#1a4a7a;font-size:9px;}
+.kcnl-grid .r-days th{background:#2d6a4f;color:#fff;padding:6px 4px;text-align:center;font-size:11px;font-weight:600;border:1px solid #1a3a2a;white-space:nowrap;}
+.kcnl-grid .r-days .th-time{background:#1a3a2a;width:44px;}
+.kcnl-grid .r-days .th-act{background:#2d6a4f;}
+.kcnl-grid .r-days .th-typ{background:#1f5239;}
+.kcnl-grid .r-days .th-msr{background:#1a3a2a;color:#7dd3a8;}
+.kcnl-grid .r-sub th{background:#f0f7f4;color:var(--ink3);font-size:10px;padding:3px 4px;text-align:center;border:1px solid var(--bd);}
+/* Data rows */
+.kcnl-grid .r-data td{border:1px solid #ddd;padding:0;vertical-align:middle;}
+.kcnl-grid .r-data .td-time{background:#f5f5f5;text-align:center;font-size:10px;font-weight:600;color:#555;padding:2px 4px;width:44px;}
+.kcnl-grid .r-data .td-act{min-width:100px;max-width:130px;}
+.kcnl-grid .r-data .td-typ{min-width:70px;max-width:90px;}
+.kcnl-grid .r-data .td-msr{background:#f9f9f9;text-align:center;font-size:10px;padding:2px 6px;min-width:50px;}
+/* Cell inputs */
+.kcnl-act-in{width:100%;border:none;background:transparent;font-size:11px;font-family:var(--sans);padding:3px 5px;outline:none;resize:none;line-height:1.3;min-height:28px;display:block;box-sizing:border-box;}
+.kcnl-act-in:focus{background:rgba(255,255,255,.9);}
+.kcnl-typ-sel{width:100%;border:none;background:transparent;font-size:10px;font-family:var(--sans);padding:2px 3px;outline:none;cursor:pointer;display:block;box-sizing:border-box;}
+.kcnl-typ-sel:focus{background:rgba(255,255,255,.9);}
+/* Màu nền theo loại — giống Excel */
+.nl-G{background:#b7e1cd!important;}
+.nl-N{background:#fff2cc!important;}
+.nl-D{background:#f4cccc!important;}
+/* Đo lường */
+.msr-g{color:#2d6a4f;font-weight:700;font-size:12px;}
+.msr-n{color:#8a6200;font-weight:700;font-size:12px;}
+.msr-d{color:#8b1e2d;font-weight:700;font-size:12px;}
+.msr-pct{font-size:10px;color:var(--ink3);}
+.msr-goal{font-size:9px;padding:2px 4px;border-radius:3px;margin-top:2px;display:inline-block;}
+.msr-goal.pass{background:#b7e1cd;color:#1a3a2a;}.msr-goal.fail{background:#f4cccc;color:#6b0000;}
+/* Hist */
+.kcnl-hist-item{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;border-bottom:1px solid var(--bd);font-size:12px;cursor:pointer;transition:background .1s;}
+.kcnl-hist-item:hover{background:var(--xbg);}
+
 /* ── STATS TABLE ── */
 .tk-tr td{padding:10px 16px;border-bottom:1px solid var(--bd);vertical-align:middle;}
 .tk-tr:last-child td{border-bottom:none;}
@@ -341,7 +387,8 @@ textarea{resize:none;min-height:52px;}
 <header class="hdr">
   <div class="logo">Dòng Tiền Xanh</div>
   <nav class="tabs">
-    <button class="tab on" onclick="goTab('thu-chi',this)">Thu / Chi</button>
+    <button class="tab on" onclick="goTab('khoi-cau-nl',this)">🌿 Khối Cầu NL</button>
+    <button class="tab" onclick="goTab('thu-chi',this)">Thu / Chi</button>
     <button class="tab" onclick="goTab('ngan-sach',this)">Ngân Sách</button>
     <button class="tab" onclick="goTab('tiet-kiem',this)">Quỹ Bảo An</button>
     <button class="tab" onclick="goTab('no-tai-san',this)">Nợ & Tài Sản</button>
@@ -379,7 +426,45 @@ textarea{resize:none;min-height:52px;}
 </header>
 
 <!-- ═══ THU / CHI ═══ -->
-<div id="tab-thu-chi" class="page on">
+<!-- ═══ KHỐI CẦU NĂNG LƯỢNG ═══ -->
+<div id="tab-khoi-cau-nl" class="page on">
+
+  <!-- Nav tuần -->
+  <div class="kcnl-week-nav">
+    <button class="btn btn-g" onclick="kcnlShiftWeek(-1)">‹ Tuần trước</button>
+    <span class="kcnl-week-lbl" id="kcnl-week-lbl"></span>
+    <button class="btn btn-g" onclick="kcnlShiftWeek(1)">Tuần sau ›</button>
+    <button class="btn btn-o" onclick="kcnlGoToday()" style="font-size:11px;">Tuần này</button>
+    <div style="flex:1;"></div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink3);">
+      <input type="date" id="kcnl-from" onchange="kcnlGoDate(this.value)"
+        style="font-size:11px;padding:3px 8px;border:1px solid var(--bd2);border-radius:7px;background:var(--card);font-family:var(--sans);">
+      <button class="btn btn-o" style="font-size:11px;" onclick="kcnlNewWeek()">+ Tuần mới</button>
+      <button class="btn btn-x" style="font-size:11px;" onclick="kcnlSaveWeek()">💾 Lưu tuần</button>
+    </div>
+  </div>
+
+  <!-- Bảng chính giống Excel: hàng = giờ, cột = ngày×2 + đo lường -->
+  <div class="kcnl-grid-wrap card">
+    <div id="kcnl-empty" style="display:none;padding:40px;text-align:center;color:var(--ink3);">
+      <div style="font-size:32px;margin-bottom:8px;">📋</div>
+      <div style="font-size:14px;font-weight:500;">Chưa có dữ liệu tuần này</div>
+      <div style="font-size:12px;margin-top:4px;">Nhấn <b>"+ Tuần mới"</b> để bắt đầu</div>
+    </div>
+    <table class="kcnl-grid" id="kcnl-table" style="display:none;"></table>
+  </div>
+
+  <!-- Lịch sử -->
+  <div class="card" style="margin-top:14px;">
+    <div class="card-hdr">
+      <span class="card-title">📚 Lịch Sử Tuần</span>
+      <span style="font-size:11px;color:var(--ink3);">Click để xem lại</span>
+    </div>
+    <div id="kcnl-hist"></div>
+  </div>
+</div>
+
+<div id="tab-thu-chi" class="page">
   <div class="sbar" id="tc-sbar"></div>
 
   <div class="two-col">
@@ -1160,6 +1245,11 @@ function initFirebase(){
         }catch(e){}
         // Sau đó sync Firebase
         startDataListener(currentUid);
+        // Sync KCNL
+        db.ref('/kcnl/'+currentUid+'/weeks').once('value').then(snap=>{
+          const remote=snap.val();
+          if(remote){ kcnlWeeks={...kcnlWeeks,...remote}; renderKCNL(); }
+        });
       } else {
         currentUid = null;
         setUserUI(null);
@@ -2953,20 +3043,351 @@ function renderAll(){
   if(!active)return;
   const id=active.id;
   updateHdrBal();
-  if(id==='tab-thu-chi')renderTC();
+  if(id==='tab-khoi-cau-nl') renderKCNL();
+  else if(id==='tab-thu-chi')renderTC();
   else if(id==='tab-ngan-sach')renderBudget();
   else if(id==='tab-tiet-kiem')renderTietKiem();
   else if(id==='tab-no-tai-san')renderNTS();
   else if(id==='tab-thong-ke')renderTK();
 }
 
-// ═══ INIT ═══
+// ═══ KHỐI CẦU NĂNG LƯỢNG ═══
+const KCNL_HOURS = Array.from({length:24},(_,i)=>i); // 0–23h
+const KCNL_TYPES = [
+  '[G] Nhà 1 - Bản thân','[G] Nhà 2 - Cha mẹ','[G] Nhà 3 - Vợ / chồng',
+  '[G] Nhà 4 - Hồn thiêng','[G] Nhà 5 - Thiên nhiên',
+  '[N] Con cái','[N] Anh chị em','[N] Công việc','[N] Học tập','[N] Họ hàng / Xã hội',
+  '[D] Mạng XH vô ích','[D] Tức giận','[D] Lãng phí','[D] Trì hoãn','[D] Thờ ơ'
+];
+const KCNL_TARGET = {G:{min:50,label:'≥ 50%'},N:{min:30,max:40,label:'30–40%'},D:{max:10,label:'< 10%'}};
+const KCNL_COLORS = {G:'#eaf7f0',N:'#fef9e7',D:'#fdf0f1'};
+
+let kcnlCurrentWeekStart = null; // Date (Monday)
+let kcnlWeeks = {}; // key: 'YYYY-MM-DD' (monday) → {days:[{date,cells:[{act,type}]}]}
+
+function kcnlLoad(){
+  try{
+    const s=localStorage.getItem('kcnl'+(currentUid?'_'+currentUid:''));
+    if(s){ kcnlWeeks={...JSON.parse(s)}; }
+  }catch(e){}
+}
+
+function kcnlSave(){
+  try{ localStorage.setItem('kcnl'+(currentUid?'_'+currentUid:''), JSON.stringify(kcnlWeeks)); }catch(e){}
+  // Firebase
+  if(currentUid && db){
+    db.ref('/kcnl/'+currentUid+'/weeks').set(kcnlWeeks)
+      .catch(e=>console.error('KCNL save error',e));
+  }
+}
+
+function kcnlGetMonday(date){
+  const d=new Date(date);
+  const day=d.getDay();
+  const diff=day===0?-6:1-day;
+  d.setDate(d.getDate()+diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function kcnlWeekKey(monday){ return monday.toISOString().slice(0,10); }
+
+function kcnlGoToday(){
+  kcnlCurrentWeekStart = kcnlGetMonday(new Date());
+  renderKCNL();
+}
+
+function kcnlShiftWeek(d){
+  if(!kcnlCurrentWeekStart) kcnlCurrentWeekStart=kcnlGetMonday(new Date());
+  kcnlCurrentWeekStart=new Date(kcnlCurrentWeekStart);
+  kcnlCurrentWeekStart.setDate(kcnlCurrentWeekStart.getDate()+d*7);
+  renderKCNL();
+}
+
+function kcnlGoDate(val){
+  if(!val) return;
+  kcnlCurrentWeekStart=kcnlGetMonday(new Date(val));
+  renderKCNL();
+}
+
+function kcnlNewWeek(){
+  const key=kcnlWeekKey(kcnlCurrentWeekStart);
+  if(kcnlWeeks[key]){
+    if(!confirm('Tuần này đã có dữ liệu. Tạo mới sẽ xóa hết. Tiếp tục?')) return;
+  }
+  kcnlWeeks[key]=kcnlBlankWeek(kcnlCurrentWeekStart);
+  renderKCNL();
+  toast('Đã tạo tuần mới ✓');
+}
+
+function kcnlBlankWeek(monday){
+  const days=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(monday);
+    d.setDate(d.getDate()+i);
+    days.push({
+      date:d.toISOString().slice(0,10),
+      cells:KCNL_HOURS.map(h=>({h,act:'',type:''}))
+    });
+  }
+  return {key:kcnlWeekKey(monday),days};
+}
+
+function kcnlSaveWeek(){
+  const key=kcnlWeekKey(kcnlCurrentWeekStart);
+  // Đọc từ DOM
+  const week=kcnlWeeks[key]||(kcnlWeeks[key]=kcnlBlankWeek(kcnlCurrentWeekStart));
+  week.days.forEach((day,di)=>{
+    day.cells.forEach((cell,hi)=>{
+      const actEl=document.getElementById(`kcnl-act-${di}-${hi}`);
+      const typEl=document.getElementById(`kcnl-typ-${di}-${hi}`);
+      if(actEl) cell.act=actEl.value;
+      if(typEl) cell.type=typEl.value;
+    });
+  });
+  kcnlSave();
+  renderKCNLStats();
+  renderKCNLHist();
+  toast('Đã lưu tuần ✓');
+}
+
+function kcnlTypeClass(type){
+  if(!type) return '';
+  if(type.startsWith('[G]')) return 'nl-G';
+  if(type.startsWith('[N]')) return 'nl-N';
+  if(type.startsWith('[D]')) return 'nl-D';
+  return '';
+}
+
+function kcnlTypeCode(type){
+  if(!type) return '';
+  if(type.startsWith('[G]')) return 'G';
+  if(type.startsWith('[N]')) return 'N';
+  if(type.startsWith('[D]')) return 'D';
+  return '';
+}
+
+function kcnlCalcStats(week){
+  let G=0,N=0,D=0,total=0;
+  (week.days||[]).forEach(day=>{
+    (day.cells||[]).forEach(cell=>{
+      if(!cell.type) return;
+      const c=kcnlTypeCode(cell.type);
+      if(c==='G') G++;
+      else if(c==='N') N++;
+      else if(c==='D') D++;
+      total++;
+    });
+  });
+  return {G,N,D,total};
+}
+
+function renderKCNL(){
+  if(!kcnlCurrentWeekStart) kcnlCurrentWeekStart=kcnlGetMonday(new Date());
+  const key=kcnlWeekKey(kcnlCurrentWeekStart);
+  const week=kcnlWeeks[key];
+
+  // Week label
+  const endDate=new Date(kcnlCurrentWeekStart); endDate.setDate(endDate.getDate()+6);
+  const fmt2=d=>`${d.getDate()}/${d.getMonth()+1}`;
+  const lbl=document.getElementById('kcnl-week-lbl');
+  if(lbl) lbl.textContent=`Tuần: ${fmt2(kcnlCurrentWeekStart)} – ${fmt2(endDate)}/${endDate.getFullYear()}`;
+  const fromIn=document.getElementById('kcnl-from');
+  if(fromIn) fromIn.value=key;
+
+  const emptyEl=document.getElementById('kcnl-empty');
+  const table=document.getElementById('kcnl-table');
+
+  if(!week){
+    if(emptyEl) emptyEl.style.display='block';
+    if(table) table.style.display='none';
+    renderKCNLHist();
+    return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+  if(table) table.style.display='';
+
+  const DOW=['Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy','Chủ Nhật'];
+  const TYPES=KCNL_TYPES;
+
+  // Tính đo lường
+  const {G,N,D,total}=kcnlCalcStats(week);
+  const pG=total?Math.round(G/total*100):0;
+  const pN=total?Math.round(N/total*100):0;
+  const pD=total?Math.round(D/total*100):0;
+
+  let html='';
+
+  // Row 1: Tiêu đề lớn + chú thích
+  html+=`<thead>
+  <tr class="r-title">
+    <td colspan="${1+7*2}" style="background:#1a3a2a;color:#fff;font-size:13px;padding:7px 12px;letter-spacing:.5px;">
+      🌿 NĂNG LƯỢNG TUẦN — 5 NGÔI NHÀ &nbsp;|&nbsp; ${fmt2(kcnlCurrentWeekStart)} – ${fmt2(endDate)}/${endDate.getFullYear()}
+    </td>
+    <td colspan="3" style="background:#1a3a2a;color:#7dd3a8;font-size:11px;text-align:center;padding:7px;">📊 ĐO LƯỜNG</td>
+  </tr>
+  <tr class="r-legend">
+    <td style="background:#f5f5f5;"></td>
+    <td colspan="4" class="leg-g">🟢 GỐC — Nuôi dưỡng 5 Ngôi Nhà</td>
+    <td colspan="4" class="leg-n">🌿 NHÁNH / NGỌN — Đầu tư có ích</td>
+    <td colspan="4" class="leg-d">🔴 ĐỘC — Hại + Lãng phí cần cắt bỏ</td>
+    <td colspan="3" class="leg-tip">Click ô "Loại ▼" → chọn → màu tự đổi</td>
+    <td style="background:#f5f5f5;font-size:10px;color:#555;">Loại</td>
+    <td style="background:#f5f5f5;font-size:10px;color:#555;">Số lần</td>
+    <td style="background:#f5f5f5;font-size:10px;color:#555;">Tỉ lệ</td>
+  </tr>
+  <tr class="r-days">
+    <th class="th-time">⏰ Giờ</th>`;
+
+  week.days.forEach((day,i)=>{
+    const d=new Date(day.date);
+    html+=`<th class="th-act" colspan="2">${DOW[i]}<br><span style="font-weight:400;font-size:10px;">${fmt2(d)}</span></th>`;
+  });
+  html+=`<th class="th-msr" colspan="3">📊 Cả tuần</th></tr>
+  <tr class="r-sub">
+    <th style="background:#f0f7f4;"></th>`;
+  for(let i=0;i<7;i++){
+    html+=`<th>📋 Hoạt động</th><th>💡 Loại ▼</th>`;
+  }
+  html+=`<th>Loại</th><th>Số lần</th><th>Tỉ lệ</th></tr>
+  </thead><tbody>`;
+
+  // Data rows: 24 giờ
+  KCNL_HOURS.forEach((h,hi)=>{
+    html+=`<tr class="r-data"><td class="td-time">${String(h).padStart(2,'0')}:00</td>`;
+    week.days.forEach((day,di)=>{
+      const cell=day.cells[hi]||{h,act:'',type:''};
+      const cls=kcnlTypeClass(cell.type);
+      const opts=TYPES.map(t=>`<option value="${t}"${cell.type===t?' selected':''}>${t}</option>`).join('');
+      html+=`<td class="td-act ${cls}" id="kcnl-td-${di}-${hi}">
+        <input class="kcnl-act-in" id="kcnl-act-${di}-${hi}" value="${(cell.act||'').replace(/"/g,'&quot;')}" placeholder="Hoạt động...">
+      </td>
+      <td class="td-typ ${cls}" id="kcnl-tdt-${di}-${hi}">
+        <select class="kcnl-typ-sel" id="kcnl-typ-${di}-${hi}" onchange="kcnlOnTypeChange(${di},${hi},this.value)">
+          <option value="">— Loại —</option>
+          ${opts}
+        </select>
+      </td>`;
+    });
+
+    // Phần đo lường bên phải — chỉ hiện ở 3 hàng cụ thể như Excel
+    if(hi===0){
+      html+=`<td class="td-msr" rowspan="3" style="vertical-align:middle;text-align:center;">
+        <div class="msr-g">${pG}%</div>
+        <div style="font-size:10px;color:#2d6a4f;">🟢 GỐC</div>
+        <div class="msr-pct">${G} lần</div>
+        <div class="msr-goal ${pG>=50?'pass':'fail'}">${pG>=50?'✓ ≥50%':'✗ <50%'}</div>
+      </td>
+      <td class="td-msr" rowspan="3" style="text-align:center;vertical-align:middle;">
+        <div style="font-size:20px;font-weight:700;color:#2d6a4f;">${G}</div>
+      </td>
+      <td class="td-msr" rowspan="3" style="text-align:center;vertical-align:middle;">
+        <div style="font-size:14px;font-weight:700;color:#2d6a4f;">${pG}%</div>
+      </td>`;
+    } else if(hi===3){
+      html+=`<td class="td-msr" rowspan="3" style="vertical-align:middle;text-align:center;">
+        <div class="msr-n">${pN}%</div>
+        <div style="font-size:10px;color:#8a6200;">🌿 NHÁNH</div>
+        <div class="msr-pct">${N} lần</div>
+        <div class="msr-goal ${pN>=30&&pN<=40?'pass':'fail'}">${pN>=30&&pN<=40?'✓ 30-40%':'✗ 30-40%'}</div>
+      </td>
+      <td class="td-msr" rowspan="3" style="text-align:center;vertical-align:middle;">
+        <div style="font-size:20px;font-weight:700;color:#8a6200;">${N}</div>
+      </td>
+      <td class="td-msr" rowspan="3" style="text-align:center;vertical-align:middle;">
+        <div style="font-size:14px;font-weight:700;color:#8a6200;">${pN}%</div>
+      </td>`;
+    } else if(hi===6){
+      html+=`<td class="td-msr" rowspan="3" style="vertical-align:middle;text-align:center;">
+        <div class="msr-d">${pD}%</div>
+        <div style="font-size:10px;color:#8b1e2d;">🔴 ĐỘC</div>
+        <div class="msr-pct">${D} lần</div>
+        <div class="msr-goal ${pD<10?'pass':'fail'}">${pD<10?'✓ <10%':'✗ <10%'}</div>
+      </td>
+      <td class="td-msr" rowspan="3" style="text-align:center;vertical-align:middle;">
+        <div style="font-size:20px;font-weight:700;color:#8b1e2d;">${D}</div>
+      </td>
+      <td class="td-msr" rowspan="3" style="text-align:center;vertical-align:middle;">
+        <div style="font-size:14px;font-weight:700;color:#8b1e2d;">${pD}%</div>
+      </td>`;
+    } else if(hi===10){
+      html+=`<td class="td-msr" colspan="3" style="text-align:center;vertical-align:middle;background:#f0f7f4;font-size:10px;padding:6px;">
+        🎯 MỤC TIÊU<br>🟢 GỐC ≥ 50%<br>🌿 NHÁNH 30–40%<br>🔴 ĐỘC &lt; 10%
+      </td>`;
+    } else if(![1,2,4,5,7,8,9,11].includes(hi)){
+      html+=`<td class="td-msr" colspan="3" style="background:#f9f9f9;"></td>`;
+    }
+
+    html+=`</tr>`;
+  });
+
+  html+=`</tbody>`;
+  table.innerHTML=html;
+  renderKCNLHist();
+}
+
+function kcnlOnTypeChange(di,hi,val){
+  const td=document.getElementById(`kcnl-td-${di}-${hi}`);
+  const tdt=document.getElementById(`kcnl-tdt-${di}-${hi}`);
+  const cls=kcnlTypeClass(val);
+  if(td){ td.className='td-act '+cls; }
+  if(tdt){ tdt.className='td-typ '+cls; }
+  // Ghi vào bộ nhớ ngay
+  const key=kcnlWeekKey(kcnlCurrentWeekStart);
+  if(!kcnlWeeks[key]) kcnlWeeks[key]=kcnlBlankWeek(kcnlCurrentWeekStart);
+  const actEl=document.getElementById(`kcnl-act-${di}-${hi}`);
+  kcnlWeeks[key].days[di].cells[hi]={h:hi,act:actEl?.value||'',type:val};
+}
+
+function renderKCNLHist(){
+  const el=document.getElementById('kcnl-hist');
+  if(!el) return;
+  const keys=Object.keys(kcnlWeeks).sort((a,b)=>b.localeCompare(a));
+  if(!keys.length){ el.innerHTML='<div class="empty">Chưa có tuần nào được lưu</div>'; return; }
+  el.innerHTML=keys.map(k=>{
+    const w=kcnlWeeks[k];
+    const end=new Date(k); end.setDate(end.getDate()+6);
+    const fmt2=d=>`${d.getDate()}/${d.getMonth()+1}`;
+    const {G,N,D,total}=kcnlCalcStats(w);
+    const pG=total?Math.round(G/total*100):0;
+    const pN=total?Math.round(N/total*100):0;
+    const pD=total?Math.round(D/total*100):0;
+    const isCurrent=k===kcnlWeekKey(kcnlCurrentWeekStart);
+    return `<div class="kcnl-hist-item${isCurrent?' ':''}" onclick="kcnlGoDate('${k}')"
+      style="${isCurrent?'background:var(--xbg);border-left:3px solid var(--x);':''}">
+      <div>
+        <span style="font-weight:600;">${fmt2(new Date(k))} – ${fmt2(end)}/${end.getFullYear()}</span>
+        ${isCurrent?'<span style="font-size:10px;color:var(--x);margin-left:6px;">◀ Đang xem</span>':''}
+      </div>
+      <div style="display:flex;gap:10px;font-size:11px;align-items:center;">
+        <span class="kcnl-g">🟢 ${pG}%</span>
+        <span class="kcnl-n">🌿 ${pN}%</span>
+        <span class="kcnl-d">🔴 ${pD}%</span>
+        <span style="color:var(--ink3);">${total} ô</span>
+        <button class="btn btn-del" style="font-size:10px;padding:2px 7px;" onclick="event.stopPropagation();kcnlDelWeek('${k}')">Xóa</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function kcnlDelWeek(key){
+  if(!confirm('Xóa tuần này?')) return;
+  delete kcnlWeeks[key];
+  kcnlSave();
+  renderKCNL();
+  toast('Đã xóa ✓');
+}
+
+// ═══ INIT KCNL ═══
 load();
+kcnlLoad();
+kcnlCurrentWeekStart = kcnlGetMonday(new Date());
 initMonth();
 populateSelects();
 const _tkp=document.getElementById('tk-month-picker');
 if(_tkp) _tkp.value=tkMonth;
 renderAll();
+renderKCNL();
 // Khởi động Firebase Auth
 if(typeof firebase !== 'undefined'){
   initFirebase();
