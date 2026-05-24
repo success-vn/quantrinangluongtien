@@ -24,17 +24,47 @@
 body{font-family:var(--sans);background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;}
 
 /* ── HEADER ── */
-.hdr{background:var(--card);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:100;height:50px;display:flex;align-items:center;padding:0 20px;gap:0;}
-.logo{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--x);margin-right:24px;white-space:nowrap;}
-.tabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none;}
+.hdr{background:var(--card);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:100;display:flex;flex-direction:column;}
+/* Desktop: 1 hàng */
+.hdr-top{display:flex;align-items:center;padding:0 12px;height:44px;gap:8px;}
+.logo{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--x);white-space:nowrap;flex-shrink:0;line-height:1.2;}
+/* Nav: hàng riêng với mũi tên scroll */
+.tabs-wrap{display:flex;align-items:center;border-top:1px solid var(--bd);background:var(--card);}
+.tab-arrow{background:none;border:none;border-right:1px solid var(--bd);padding:0 10px;height:36px;cursor:pointer;font-size:16px;color:var(--ink3);flex-shrink:0;transition:all .1s;}
+.tab-arrow:last-child{border-right:none;border-left:1px solid var(--bd);border-right:none;}
+.tab-arrow:hover{background:var(--xbg);color:var(--x);}
+.tabs{display:flex;gap:0;flex:1;overflow-x:auto;scrollbar-width:none;}
 .tabs::-webkit-scrollbar{display:none;}
-.tab{padding:5px 14px;border-radius:7px;font-size:13px;color:var(--ink3);cursor:pointer;border:none;background:none;font-family:var(--sans);white-space:nowrap;transition:all .15s;}
+.tab{padding:7px 12px;font-size:12px;color:var(--ink3);cursor:pointer;border:none;background:none;font-family:var(--sans);white-space:nowrap;transition:all .12s;border-right:1px solid var(--bd);flex-shrink:0;}
 .tab:hover{background:var(--xbg);color:var(--x);}
-.tab.on{background:var(--xbg);color:var(--x);font-weight:500;}
-.hdr-right{display:flex;align-items:center;gap:8px;margin-left:12px;flex-shrink:0;}
-.mon-nav{display:flex;align-items:center;gap:4px;}
-.mon-btn{background:none;border:1px solid var(--bd);border-radius:6px;padding:3px 9px;cursor:pointer;font-size:14px;color:var(--ink2);line-height:1;}
+.tab.on{background:var(--xbg);color:var(--x);font-weight:600;}
+.hdr-right{display:flex;align-items:center;gap:5px;flex:1;justify-content:flex-end;}
+.mon-nav{display:flex;align-items:center;gap:3px;}
+.mon-btn{background:none;border:1px solid var(--bd);border-radius:6px;padding:2px 7px;cursor:pointer;font-size:13px;color:var(--ink2);line-height:1;}
 .mon-btn:hover{background:var(--bg);}
+.mon-lbl{font-size:12px;font-weight:600;color:var(--ink);min-width:44px;text-align:center;}
+.hdr-io{display:flex;gap:3px;}
+/* Responsive */
+@media(max-width:600px){
+  .hdr-top{padding:0 8px;height:40px;}
+  .logo{font-size:14px;}
+  .tab{padding:6px 10px;font-size:11px;}
+  .mon-lbl{font-size:11px;min-width:38px;}
+  .bal-pill{font-size:11px;padding:3px 7px;}
+  .page{padding:10px 8px;}
+  .two-col{grid-template-columns:1fr;}
+  .sg4{grid-template-columns:1fr 1fr;}
+  .card-hdr{padding:10px 12px;}
+  .tbl{font-size:11px;}
+  .add-form{padding:10px 12px;}
+  .fg3{grid-template-columns:1fr 1fr;}
+  .fg4{grid-template-columns:1fr 1fr;}
+  .kcnl-target{grid-template-columns:1fr;}
+  .kcnl-stats{grid-template-columns:1fr 1fr;}
+  input,select,textarea{font-size:13px;padding:8px 10px;}
+  .btn{padding:6px 12px;font-size:12px;}
+  .modal-box{width:96%;padding:16px;}
+}
 .mon-lbl{font-size:12px;font-weight:500;min-width:90px;text-align:center;color:var(--ink2);}
 .bal-pill{background:var(--xbg);border:1px solid var(--xbd);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:500;color:var(--x);cursor:pointer;white-space:nowrap;}
 
@@ -454,43 +484,49 @@ textarea{resize:none;min-height:52px;}
 </div>
 
 <header class="hdr">
-  <div class="logo">Dòng Tiền Xanh</div>
-  <nav class="tabs">
-    <button class="tab on" onclick="goTab('khoi-cau-nl',this)">🌿 Khối Cầu NL</button>
-    <button class="tab" onclick="goTab('thu-chi',this)">Thu / Chi</button>
-    <button class="tab" onclick="goTab('ngan-sach',this)">Ngân Sách</button>
-    <button class="tab" onclick="goTab('tiet-kiem',this)">Quỹ Bảo An</button>
-    <button class="tab" onclick="goTab('no-tai-san',this)">Nợ & Tài Sản</button>
-    <button class="tab" onclick="goTab('thong-ke',this)">Thống Kê</button>
-    <button class="tab" id="admin-tab" onclick="goTab('admin',this)" style="display:none;">👑 Admin</button>
-  </nav>
-  <div class="hdr-right">
-    <div class="mon-nav">
-      <button class="mon-btn" onclick="chgMonth(-1)">‹</button>
-      <span class="mon-lbl" id="mon-lbl"></span>
-      <div class="mon-pick-wrap" id="mon-pick-wrap">
-        <button class="mon-btn mon-cal-btn" onclick="toggleMonPicker()" title="Chọn tháng/năm">📅</button>
-        <div class="mon-picker-drop" id="mon-picker-drop">
-          <div class="mpd-header">
-            <button class="mpd-yr-btn" onclick="mpYearShift(-1)">‹</button>
-            <span class="mpd-yr-lbl" id="mpd-yr"></span>
-            <button class="mpd-yr-btn" onclick="mpYearShift(1)">›</button>
+  <div class="hdr-top">
+    <div class="logo">💚 Dòng Tiền<br><span style="font-size:13px;font-weight:500;color:var(--xdk);">Hạnh Phúc Nhảy Vọt</span></div>
+    <div class="hdr-right">
+      <div class="mon-nav">
+        <button class="mon-btn" onclick="chgMonth(-1)">‹</button>
+        <span class="mon-lbl" id="mon-lbl"></span>
+        <div class="mon-pick-wrap" id="mon-pick-wrap">
+          <button class="mon-btn mon-cal-btn" onclick="toggleMonPicker()" title="Chọn tháng/năm">📅</button>
+          <div class="mon-picker-drop" id="mon-picker-drop">
+            <div class="mpd-header">
+              <button class="mpd-yr-btn" onclick="mpYearShift(-1)">‹</button>
+              <span class="mpd-yr-lbl" id="mpd-yr"></span>
+              <button class="mpd-yr-btn" onclick="mpYearShift(1)">›</button>
+            </div>
+            <div class="mpd-months" id="mpd-months"></div>
           </div>
-          <div class="mpd-months" id="mpd-months"></div>
         </div>
+        <button class="mon-btn" onclick="chgMonth(1)">›</button>
       </div>
-      <button class="mon-btn" onclick="chgMonth(1)">›</button>
+      <div class="bal-pill" onclick="openModal('m-acc')">💳 <span id="hdr-bal">0đ</span></div>
+      <div class="sync-badge" id="sync-badge" style="padding:2px 6px;"><span class="sync-dot" id="sync-dot"></span><span id="sync-lbl" style="font-size:9px;"></span></div>
+      <div class="user-pill" id="user-pill" onclick="confirmSignOut()" title="Đăng xuất" style="padding:2px 4px;">
+        <img class="user-av" id="user-av" src="" alt="" style="width:24px;height:24px;">
+      </div>
+      <div class="hdr-io" style="gap:2px;">
+        <button class="btn-io" onclick="exportData()" title="Xuất JSON" style="padding:2px 7px;font-size:11px;">⬇</button>
+        <button class="btn-io" onclick="document.getElementById('import-file').click()" title="Nhập JSON" style="padding:2px 7px;font-size:11px;">⬆</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
+      </div>
     </div>
-    <div class="bal-pill" onclick="openModal('m-acc')">💳 <span id="hdr-bal">0đ</span></div>
-    <div class="sync-badge" id="sync-badge" style="padding:2px 6px;"><span class="sync-dot" id="sync-dot"></span><span id="sync-lbl" style="font-size:9px;"></span></div>
-    <div class="user-pill" id="user-pill" onclick="confirmSignOut()" title="Đăng xuất" style="padding:2px 4px;">
-      <img class="user-av" id="user-av" src="" alt="" style="width:24px;height:24px;">
-    </div>
-    <div class="hdr-io" style="gap:2px;">
-      <button class="btn-io" onclick="exportData()" title="Xuất dữ liệu JSON" style="padding:2px 7px;font-size:11px;">⬇</button>
-      <button class="btn-io" onclick="document.getElementById('import-file').click()" title="Nhập dữ liệu JSON" style="padding:2px 7px;font-size:11px;">⬆</button>
-      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
-    </div>
+  </div>
+  <div class="tabs-wrap">
+    <button class="tab-arrow" onclick="tabScroll(-1)">‹</button>
+    <nav class="tabs" id="tabs-nav">
+      <button class="tab on" onclick="goTab('khoi-cau-nl',this)">🌿 Khối Cầu NL</button>
+      <button class="tab" onclick="goTab('thu-chi',this)">Thu / Chi</button>
+      <button class="tab" onclick="goTab('ngan-sach',this)">Ngân Sách</button>
+      <button class="tab" onclick="goTab('tiet-kiem',this)">Quỹ Bảo An</button>
+      <button class="tab" onclick="goTab('no-tai-san',this)">Nợ & Tài Sản</button>
+      <button class="tab" onclick="goTab('thong-ke',this)">Thống Kê</button>
+      <button class="tab" id="admin-tab" onclick="goTab('admin',this)" style="display:none;">👑 Admin</button>
+    </nav>
+    <button class="tab-arrow" onclick="tabScroll(1)">›</button>
   </div>
 </header>
 
@@ -1670,6 +1706,11 @@ document.addEventListener('click', e=>{
 });
 
 // ═══ NAV ═══
+function tabScroll(dir){
+  const nav=document.getElementById('tabs-nav');
+  if(nav) nav.scrollBy({left:dir*120,behavior:'smooth'});
+}
+
 function goTab(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
