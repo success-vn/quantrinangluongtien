@@ -1344,6 +1344,8 @@ const DEF_CATS={
 
 let curMonth=new Date().toISOString().slice(0,7);
 let tkMonth=new Date().toISOString().slice(0,7); // Thống Kê dùng tháng riêng
+// Cache cho renderTKCharts dùng
+let _tkThuM=[], _tkChiM=[], _tkLbl='';
 let D={thu:[],chi:[],no:[],vaytoi:[],ts:[],budgets:[],goals:[],savingGoals:[],funds:[],recurring:[],accounts:[{id:1,name:'Tiền mặt',bal:0,type:'cash'},{id:2,name:'Ngân hàng',bal:0,type:'bank'}],nsPlan:{}};
 const CH={};
 
@@ -3093,6 +3095,9 @@ function renderTK(){
     </tr>`;
   }
 
+  // Cache cho renderTKCharts
+  _tkThuM=thuM; _tkChiM=chiM; _tkLbl=tkLbl;
+
   // ── BLOCK 3: gọi hàm riêng ──
   renderTKCharts();
 }
@@ -3131,10 +3136,10 @@ function renderTKCharts(){
   ]},{scales:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{beginAtZero:true}}});
 
   // ── BLOCK 4: Danh mục thu (donut) ──
-  const thuCatAmts=thuCatsU.map(c=>thuM.filter(x=>(x.cat||'Khác')===c).reduce((a,x)=>a+x.amt,0));
+  const thuCatAmts=thuCatsU.map(c=>_tkThuM.filter(x=>(x.cat||'Khác')===c).reduce((a,x)=>a+x.amt,0));
   const thuCatCols=thuCatsU.map((_,i)=>`hsl(${[160,190,130,100,220,60,170][i%7]},45%,42%)`);
   const thuTitleEl=document.getElementById('tk-thu-title');
-  if(thuTitleEl) thuTitleEl.textContent=`💚 Thu Theo Danh Mục – ${tkLbl}`;
+  if(thuTitleEl) thuTitleEl.textContent=`💚 Thu Theo Danh Mục – ${_tkLbl}`;
   if(thuCatsU.length){
     mkChart('chart-thu-cat','doughnut',{
       labels:thuCatsU,
@@ -3157,8 +3162,8 @@ function renderTKCharts(){
   }
 
   // Danh mục chi (bar ngang)
-  const cats=[...new Set(chiM.map(x=>x.cat||'Khác'))];
-  const catAmts=cats.map(c=>chiM.filter(x=>(x.cat||'Khác')===c).reduce((a,x)=>a+x.amt,0));
+  const cats=[...new Set(_tkChiM.map(x=>x.cat||'Khác'))];
+  const catAmts=cats.map(c=>_tkChiM.filter(x=>(x.cat||'Khác')===c).reduce((a,x)=>a+x.amt,0));
   const catCols=cats.map((_,i)=>`hsl(${[160,45,220,30,270,10,190,90,340,130,60,200][i%12]},38%,45%)`);
   if(cats.length){
     mkChart('chart-cat','bar',{labels:cats,datasets:[{label:'Chi',data:catAmts,backgroundColor:catCols,borderRadius:3}]},
