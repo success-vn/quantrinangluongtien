@@ -1447,9 +1447,8 @@ async function doRegister(){
 
 function signInGoogle(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  // Dùng redirect thay popup — hoạt động trên cả mobile và desktop
   auth.signInWithRedirect(provider).catch(e=>{
-    authShowErr('Đăng nhập Google thất bại: '+e.message);
+    authShowErr('Lỗi: '+e.message);
   });
 }
 
@@ -1478,17 +1477,18 @@ function startDataListener(uid){
   });
 }
 
-function initFirebase(){
+async function initFirebase(){
   try {
     if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     db = firebase.database();
     auth = firebase.auth();
 
-    // Xử lý kết quả sau khi redirect từ Google về
-    // Phải xử lý TRƯỚC onAuthStateChanged để tránh flash màn hình login
-    auth.getRedirectResult().then(async result=>{
+    // Xử lý kết quả redirect từ Google
+    // Phải await trước khi onAuthStateChanged xử lý
+    try {
+      const result = await auth.getRedirectResult();
       if(result && result.user){
-        const snap=await db.ref('/users/'+result.user.uid).once('value');
+        const snap = await db.ref('/users/'+result.user.uid).once('value');
         if(!snap.val()){
           await db.ref('/users/'+result.user.uid).set({
             uid: result.user.uid,
@@ -1502,7 +1502,7 @@ function initFirebase(){
           });
         }
       }
-    }).catch(e=>console.error('Redirect result error:',e));
+    } catch(e){ console.error('getRedirectResult error:', e); }
 
     auth.onAuthStateChanged(async user => {
       if(!user){
