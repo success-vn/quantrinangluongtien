@@ -3759,40 +3759,40 @@ function renderKCNL(){
   // GỐC ở row 0 (rowspan 1), NHÁNH ở row 3 (rowspan 1), ĐỘC ở row 6 (rowspan 1), MỤC TIÊU ở row 10
   const msrCell = hi => {
     if(hi===0) return `
-      <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
+      <td class="td-msr" id="kcnl-msr-0" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
         <div style="font-size:11px;font-weight:700;color:#2d6a4f;">🟢 GỐC</div>
       </td>
       <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
         <div style="font-size:22px;font-weight:700;color:#2d6a4f;">${G}</div>
       </td>
       <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
-        <div style="font-size:16px;font-weight:700;color:#2d6a4f;">${pG}%</div>
+      <td class="td-msr" id="kcnl-msr-pct-0" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
         <div class="msr-goal ${pG>=50?'pass':'fail'}">${pG>=50?'✓ ≥50%':'✗ <50%'}</div>
       </td>`;
     if(hi===3) return `
-      <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
+      <td class="td-msr" id="kcnl-msr-3" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
         <div style="font-size:11px;font-weight:700;color:#8a6200;">🌿 NHÁNH</div>
       </td>
       <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
         <div style="font-size:22px;font-weight:700;color:#8a6200;">${N}</div>
       </td>
       <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
-        <div style="font-size:16px;font-weight:700;color:#8a6200;">${pN}%</div>
+      <td class="td-msr" id="kcnl-msr-pct-3" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
         <div class="msr-goal ${pN>=30&&pN<=40?'pass':'fail'}">${pN>=30&&pN<=40?'✓ 30-40%':'✗ 30-40%'}</div>
       </td>`;
     if(hi===6) return `
-      <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
+      <td class="td-msr" id="kcnl-msr-6" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
         <div style="font-size:11px;font-weight:700;color:#8b1e2d;">🔴 ĐỘC</div>
       </td>
       <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
         <div style="font-size:22px;font-weight:700;color:#8b1e2d;">${D}</div>
       </td>
       <td class="td-msr" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
-        <div style="font-size:16px;font-weight:700;color:#8b1e2d;">${pD}%</div>
+      <td class="td-msr" id="kcnl-msr-pct-6" style="text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;">
         <div class="msr-goal ${pD<10?'pass':'fail'}">${pD<10?'✓ <10%':'✗ <10%'}</div>
       </td>`;
     if(hi===10) return `
-      <td class="td-msr" colspan="3" style="text-align:center;vertical-align:middle;background:#f0f7f4;font-size:10px;line-height:1.8;padding:8px;">
+      <td class="td-msr" id="kcnl-msr-10" colspan="3" style="text-align:center;vertical-align:middle;background:#f0f7f4;font-size:10px;line-height:1.8;padding:8px;">
         🎯 MỤC TIÊU<br><b>🟢 GỐC ≥ 50%</b><br><b>🌿 NHÁNH 30–40%</b><br><b>🔴 ĐỘC &lt; 10%</b>
       </td>`;
     return `<td class="td-msr" colspan="3" style="background:#fafafa;"></td>`;
@@ -3872,9 +3872,39 @@ function kcnlOnTypeChange(di,hi,val){
   if(!kcnlWeeks[key]) kcnlWeeks[key]=kcnlBlankWeek(kcnlCurrentWeekStart);
   const actEl=document.getElementById(`kcnl-act-${di}-${hi}`);
   kcnlWeeks[key].days[di].cells[hi]={h:hi,act:actEl?.value||'',type:val};
-  // Auto-save ngay khi chọn loại
+  // Cập nhật đo lường ngay
+  renderKCNLMeasure();
+  // Auto-save
   if(_autoSaveTimer) clearTimeout(_autoSaveTimer);
   _autoSaveTimer = setTimeout(()=>{ kcnlSave(); syncStatus('ok','Đã lưu ✓'); }, 800);
+}
+
+function renderKCNLMeasure(){
+  const key=kcnlWeekKey(kcnlCurrentWeekStart);
+  const week=kcnlWeeks[key];
+  if(!week) return;
+
+  const {G,N,D,total}=kcnlCalcStats(week);
+  const pG=total?Math.round(G/total*100):0;
+  const pN=total?Math.round(N/total*100):0;
+  const pD=total?Math.round(D/total*100):0;
+
+  const upd=(id,html)=>{const e=document.getElementById(id);if(e)e.innerHTML=html;};
+
+  // GỐC
+  upd('kcnl-msr-0',`<div style="font-size:11px;font-weight:700;color:#2d6a4f;">🟢 GỐC</div>`);
+  upd('kcnl-msr-pct-0',`<div style="font-size:16px;font-weight:700;color:#2d6a4f;">${pG}%</div><div class="msr-goal ${pG>=50?'pass':'fail'}">${pG>=50?'✓ ≥50%':'✗ <50%'}</div>`);
+  const cntG=document.querySelector('#kcnl-msr-0 + td');if(cntG)cntG.innerHTML=`<div style="font-size:22px;font-weight:700;color:#2d6a4f;">${G}</div>`;
+
+  // NHÁNH
+  upd('kcnl-msr-3',`<div style="font-size:11px;font-weight:700;color:#8a6200;">🌿 NHÁNH</div>`);
+  upd('kcnl-msr-pct-3',`<div style="font-size:16px;font-weight:700;color:#8a6200;">${pN}%</div><div class="msr-goal ${pN>=30&&pN<=40?'pass':'fail'}">${pN>=30&&pN<=40?'✓ 30-40%':'✗ 30-40%'}</div>`);
+  const cntN=document.querySelector('#kcnl-msr-3 + td');if(cntN)cntN.innerHTML=`<div style="font-size:22px;font-weight:700;color:#8a6200;">${N}</div>`;
+
+  // ĐỘC
+  upd('kcnl-msr-6',`<div style="font-size:11px;font-weight:700;color:#8b1e2d;">🔴 ĐỘC</div>`);
+  upd('kcnl-msr-pct-6',`<div style="font-size:16px;font-weight:700;color:#8b1e2d;">${pD}%</div><div class="msr-goal ${pD<10?'pass':'fail'}">${pD<10?'✓ <10%':'✗ <10%'}</div>`);
+  const cntD=document.querySelector('#kcnl-msr-6 + td');if(cntD)cntD.innerHTML=`<div style="font-size:22px;font-weight:700;color:#8b1e2d;">${D}</div>`;
 }
 
 function renderKCNLHist(){
