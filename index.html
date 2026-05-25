@@ -1463,25 +1463,27 @@ async function doRegister(){
 
 function signInGoogle(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  if(isMobile){
-    auth.signInWithRedirect(provider).catch(e=>{ authShowErr('Lỗi: '+e.message); });
-  } else {
-    auth.signInWithPopup(provider).then(async result=>{
-      if(result && result.user){
-        const snap = await db.ref('/users/'+result.user.uid).once('value');
-        if(!snap.val()){
-          await db.ref('/users/'+result.user.uid).set({
-            uid: result.user.uid,
-            name: result.user.displayName||'',
-            email: result.user.email,
-            approved: false, rejected: false, role: 'user',
-            provider: 'google', createdAt: new Date().toISOString()
-          });
-        }
+  auth.signInWithPopup(provider).then(async result=>{
+    if(result && result.user){
+      const snap = await db.ref('/users/'+result.user.uid).once('value');
+      if(!snap.val()){
+        await db.ref('/users/'+result.user.uid).set({
+          uid: result.user.uid,
+          name: result.user.displayName||'',
+          email: result.user.email,
+          approved: false, rejected: false, role: 'user',
+          provider: 'google', createdAt: new Date().toISOString()
+        });
       }
-    }).catch(e=>{ authShowErr('Lỗi: '+e.message); });
-  }
+    }
+  }).catch(e=>{
+    // Nếu popup bị chặn → thử redirect
+    if(e.code==='auth/popup-blocked'||e.code==='auth/popup-closed-by-user'){
+      auth.signInWithRedirect(provider).catch(e2=>authShowErr('Lỗi: '+e2.message));
+    } else {
+      authShowErr('Lỗi: '+e.message);
+    }
+  });
 }
 
 function confirmSignOut(){
