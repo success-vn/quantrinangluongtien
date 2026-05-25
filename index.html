@@ -452,6 +452,9 @@ textarea{resize:none;min-height:52px;}
       <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="email@gmail.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="auth-field"><label>Mật khẩu</label><input type="password" id="login-pw" placeholder="Mật khẩu" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <button class="auth-btn auth-btn-main" onclick="doLogin()">Đăng nhập</button>
+      <div style="text-align:right;margin-top:6px;">
+        <button onclick="doForgotPassword()" style="background:none;border:none;font-size:11px;color:var(--ink3);cursor:pointer;text-decoration:underline;font-family:var(--sans);">Quên mật khẩu?</button>
+      </div>
       <div class="auth-divider">hoặc</div>
       <button class="auth-btn auth-btn-google" onclick="signInGoogle()">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="">
@@ -1416,7 +1419,20 @@ async function doLogin(){
   }
 }
 
-// ═══ ĐĂNG KÝ ═══
+async function doForgotPassword(){
+  const email = document.getElementById('login-email')?.value.trim();
+  if(!email){ authShowErr('Nhập email trước rồi bấm Quên mật khẩu'); return; }
+  try{
+    await auth.sendPasswordResetEmail(email);
+    document.getElementById('auth-err').style.display='none';
+    // Hiện thông báo thành công
+    const el=document.getElementById('auth-err');
+    if(el){ el.style.background='#eaf7f0'; el.style.borderColor='var(--xbd)'; el.style.color='var(--x)'; el.textContent='✓ Đã gửi email đặt lại mật khẩu. Kiểm tra hộp thư!'; el.style.display='block'; }
+  } catch(e){
+    const msgs={'auth/user-not-found':'Email chưa đăng ký','auth/invalid-email':'Email không hợp lệ'};
+    authShowErr(msgs[e.code]||'Lỗi: '+e.message);
+  }
+}
 async function doRegister(){
   const name=document.getElementById('reg-name')?.value.trim();
   const email=document.getElementById('reg-email')?.value.trim();
@@ -1447,9 +1463,25 @@ async function doRegister(){
 
 function signInGoogle(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider).catch(e=>{
-    authShowErr('Lỗi: '+e.message);
-  });
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(isMobile){
+    auth.signInWithRedirect(provider).catch(e=>{ authShowErr('Lỗi: '+e.message); });
+  } else {
+    auth.signInWithPopup(provider).then(async result=>{
+      if(result && result.user){
+        const snap = await db.ref('/users/'+result.user.uid).once('value');
+        if(!snap.val()){
+          await db.ref('/users/'+result.user.uid).set({
+            uid: result.user.uid,
+            name: result.user.displayName||'',
+            email: result.user.email,
+            approved: false, rejected: false, role: 'user',
+            provider: 'google', createdAt: new Date().toISOString()
+          });
+        }
+      }
+    }).catch(e=>{ authShowErr('Lỗi: '+e.message); });
+  }
 }
 
 function confirmSignOut(){
@@ -1483,8 +1515,7 @@ async function initFirebase(){
     db = firebase.database();
     auth = firebase.auth();
 
-    // Xử lý kết quả redirect từ Google
-    // Phải await trước khi onAuthStateChanged xử lý
+    // Bắt kết quả redirect (mobile)
     try {
       const result = await auth.getRedirectResult();
       if(result && result.user){
@@ -1502,9 +1533,10 @@ async function initFirebase(){
           });
         }
       }
-    } catch(e){ console.error('getRedirectResult error:', e); }
+    } catch(e){ console.error('getRedirectResult error:', e.code, e.message); }
 
     auth.onAuthStateChanged(async user => {
+      console.log('onAuthStateChanged fired, user:', user ? user.email : 'null');
       if(!user){
         currentUid = null;
         setUserUI(null);
