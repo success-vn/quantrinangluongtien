@@ -2017,14 +2017,51 @@ function renderAccModal(){
   if(!el)return;
   if(!D.accounts.length){el.innerHTML='<div class="empty">Chưa có tài khoản nào</div>';return;}
   const typeL={bank:'Ngân hàng',wallet:'Ví điện tử',cash:'Tiền mặt',invest:'Đầu tư'};
-  el.innerHTML=D.accounts.map(a=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);">
-      <div><div style="font-size:13px;font-weight:500;">${a.name}</div><div style="font-size:11px;color:var(--ink3)">${typeL[a.type]||a.type}</div></div>
-      <div style="text-align:right;">
-        <div style="font-family:var(--serif);font-size:16px;font-weight:600;color:var(--x)">${fmt(a.bal)}</div>
-        <button class="btn btn-del" style="margin-top:3px;" onclick="delAccount(${a.id})">Xóa</button>
+  el.innerHTML=D.accounts.map(a=>{
+    // Tính thu/chi đã ghi theo tài khoản này
+    const thu=D.thu.filter(x=>String(x.accId)===String(a.id)).reduce((s,x)=>s+x.amt,0);
+    const chi=D.chi.filter(x=>String(x.accId)===String(a.id)).reduce((s,x)=>s+x.amt,0);
+    const txCount=D.thu.filter(x=>String(x.accId)===String(a.id)).length + D.chi.filter(x=>String(x.accId)===String(a.id)).length;
+    return`<div style="padding:10px 0;border-bottom:1px solid var(--bd);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;">${a.name} <span style="font-size:10px;color:var(--ink3);font-weight:400;">${typeL[a.type]||a.type}</span></div>
+          <div style="font-size:10px;color:var(--ink3);margin-top:1px;">${txCount} giao dịch · Thu: +${fmt(thu)} · Chi: -${fmt(chi)}</div>
+        </div>
+        <div style="font-family:var(--serif);font-size:18px;font-weight:700;color:var(--x);">${fmt(a.bal)}</div>
       </div>
-    </div>`).join('');
+      <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
+        <input type="number" id="acc-edit-${a.id}" value="${a.bal}" placeholder="Số dư thực tế"
+          style="width:140px;font-size:12px;padding:3px 8px;border:1px solid var(--bd2);border-radius:6px;">
+        <button class="btn btn-o" style="font-size:11px;padding:3px 10px;" onclick="setAccBal(${a.id})">✏️ Cập nhật</button>
+        <button class="btn btn-g" style="font-size:11px;padding:3px 10px;" onclick="recalcAccBal(${a.id})">🔄 Tính lại từ GD</button>
+        <button class="btn btn-del" style="font-size:11px;padding:3px 8px;" onclick="delAccount(${a.id})">Xóa</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setAccBal(id){
+  const val=parseFloat(document.getElementById('acc-edit-'+id)?.value)||0;
+  const acc=D.accounts.find(a=>a.id===id);
+  if(!acc) return;
+  acc.bal=val;
+  save(); renderAccModal(); updateHdrBal();
+  toast('Đã cập nhật số dư ✓');
+}
+
+function recalcAccBal(id){
+  const acc=D.accounts.find(a=>a.id===id);
+  if(!acc) return;
+  const newBal=prompt(`Nhập số dư GỐC (số tiền lúc bắt đầu dùng app, trước khi ghi giao dịch):`, acc.baseBal||0);
+  if(newBal===null) return;
+  const base=parseFloat(newBal)||0;
+  acc.baseBal=base;
+  const thu=D.thu.filter(x=>String(x.accId)===String(id)).reduce((s,x)=>s+x.amt,0);
+  const chi=D.chi.filter(x=>String(x.accId)===String(id)).reduce((s,x)=>s+x.amt,0);
+  acc.bal=base+thu-chi;
+  save(); renderAccModal(); updateHdrBal();
+  toast(`Số dư tính lại: ${fmt(acc.bal)} (gốc ${fmt(base)} + thu ${fmt(thu)} - chi ${fmt(chi)}) ✓`);
 }
 
 function delAccount(id){D.accounts=D.accounts.filter(a=>a.id!==id);save();renderAccModal();updateHdrBal();populateSelects();}
